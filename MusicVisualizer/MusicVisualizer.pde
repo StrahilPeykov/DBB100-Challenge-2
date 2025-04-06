@@ -1,39 +1,64 @@
+/**
+ * Music Visualizer - Main Program
+ * 
+ * This program creates an interactive audio visualization system that responds to both 
+ * music and voice input. It integrates Arduino sensor data to control visualization parameters,
+ * providing a multi-sensory interactive experience.
+ * 
+ * Core Features:
+ * - Real-time FFT audio analysis with multiple frequency bands
+ * - Dual input modes (MP3 music and microphone)
+ * - Advanced beat and chord detection algorithms
+ * - Color mapping based on musical notes (Scriabin synesthesia)
+ * - Dynamic 3D visualization with multiple visual elements
+ * - Arduino integration for physical control interface
+ * - Camera controls for exploring the 3D environment
+ * 
+ * Required Libraries:
+ * - Minim (audio processing)
+ * - Serial (Arduino communication)
+ */
+
 import ddf.minim.*;
 import ddf.minim.analysis.*;
-import processing.serial.*; // Add Serial library for Arduino communication
+import processing.serial.*; // Serial library for Arduino communication
 
-// Global objects
+// ================ GLOBAL AUDIO OBJECTS ================
+
 Minim minim;
 AudioPlayer song;
 AudioInput microphone;
 FFT fft;
 
-// Arduino communication
+// ================ ARDUINO COMMUNICATION ================
+
 Serial arduinoPort;
 boolean arduinoConnected = false;
 String serialBuffer = "";
 
 // Arduino control variables
-int arduinoSizeControl = 50;    // 0-100 scale from Arduino 'A' value
-int arduinoDensityControl = 50; // 0-100 scale from Arduino 'B' value
-String arduinoVisualMode = "CIRCLE"; // Matches modes[] in Arduino code
-String arduinoJoystickPos = "CE"; // Center by default
-boolean arduinoJoystickButton = false;
-int arduinoDistance = 100; // Default mid-range distance
+int arduinoSizeControl = 50;    // Size control value (0-100) from Arduino
+int arduinoDensityControl = 50; // Density control value (0-100) from Arduino
+String arduinoVisualMode = "CIRCLE"; // Visual mode from Arduino (matches modes[] in Arduino)
+String arduinoJoystickPos = "CE"; // Joystick position (CE = center)
+boolean arduinoJoystickButton = false; // Joystick button state
+int arduinoDistance = 100; // Distance from ultrasonic sensor (cm)
 boolean manualDistance = false; // Flag to track if user is controlling with sensor
+
+// ================ AUDIO ANALYSIS PARAMETERS ================
 
 // Input mode selection
 boolean useVoiceInput = false;
 
-// Frequency band divisions - using different percentages and more bands
-final float BAND_LOW = 0.05;      // 5% for bass (changed from 3%)
-final float BAND_LOW_MID = 0.15;  // 15% for low-mids (new band)
-final float BAND_MID = 0.25;      // 25% for mids (changed from 12.5%)
-final float BAND_HIGH = 0.40;     // 40% for highs (changed from 20%)
+// Frequency band divisions
+final float BAND_LOW = 0.05;      // 5% for bass frequencies
+final float BAND_LOW_MID = 0.15;  // 15% for low-mid frequencies
+final float BAND_MID = 0.25;      // 25% for mid frequencies
+final float BAND_HIGH = 0.40;     // 40% for high frequencies
 
 // Scores for each frequency band
 float scoreLow = 0;
-float scoreLowMid = 0; // New score for low-mids
+float scoreLowMid = 0;
 float scoreMid = 0;
 float scoreHigh = 0;
 
@@ -43,11 +68,12 @@ float prevScoreLowMid = 0;
 float prevScoreMid = 0;
 float prevScoreHigh = 0;
 
-// Smoothing rate - changed from constant to adaptive
-float smoothingFactor = 0.3;
-float decayRate = 15; // Changed from 25
+// Smoothing and decay parameters
+float smoothingFactor = 0.3; // Controls transition smoothness between frames
+float decayRate = 15; // Controls how quickly scores decrease when audio fades
 
-// Beat detection variables
+// ================ BEAT DETECTION VARIABLES ================
+
 float[] prevSpectrum;
 float spectralFlux = 0;
 float averageFlux = 0;
@@ -55,44 +81,51 @@ boolean beatDetected = false;
 float beatThreshold = 0.5;
 float beatTimer = 0;
 float beatInterval = 0;
-float beatIntensity = 0; // Store how strong the beat is
+float beatIntensity = 0; // Strength of detected beat (0.0-3.0)
 
-// Audio memory/echo effect
-final int ECHO_FRAMES = 10;
+// ================ AUDIO MEMORY/ECHO EFFECT ================
+
+final int ECHO_FRAMES = 10; // Number of frames to store for echo effect
 float[][] echoBuffer;
 int echoIndex = 0;
 
-// Camera variables
+// ================ CAMERA CONTROL ================
+
 float cameraAngle = 0;
 float verticalAngle = 0;
-float rotationSpeed = 0.04; // Changed from 0.05
+float rotationSpeed = 0.04;
 boolean rotateLeft = false;
 boolean rotateRight = false;
 boolean lookUp = false;
 boolean lookDown = false;
 boolean autoMode = false; // Auto rotation/movement mode toggle
 
-// Visual elements
+// ================ VISUAL ELEMENTS ================
+
+// Visual entities (foreground objects)
 int numEntities;
 Entity[] entities;
 
-// Environment elements (renamed from walls)
-int numEnvironmentElements = 450; // Changed from 500
+// Environment elements (background structures)
+int numEnvironmentElements = 450;
 EnvironmentElement[] elements;
 
-// Star field
+// Star field (deep background)
 Star[] stars;
-int numStars = 350; // Changed from 400
-int baseNumStars = 350; // Store the base number for Arduino control
+int numStars = 350;
+int baseNumStars = 350; // Store base number for Arduino density control
 
-// Visual mode
+// ================ VISUAL MODE PARAMETERS ================
+
 boolean isCircularMode = false;
 float transitionProgress = 0.0;
 boolean transitioning = false;
-final float TRANSITION_SPEED = 0.025; // Changed from 0.03
+final float TRANSITION_SPEED = 0.025;
 
-// Color systems
+// ================ COLOR SYSTEMS ================
+
 // 1. Scriabin's synesthesia color system
+// Maps musical notes to specific colors based on Alexander Scriabin's synesthetic associations
 color[] scriabinColors = {
   color(255, 0, 0),       // C: Red
   color(255, 80, 0),      // C#/Db: Orange
@@ -108,67 +141,63 @@ color[] scriabinColors = {
   color(150, 210, 255)    // B: Bluish-White
 };
 
-// NEW Rainbow mode variables
-boolean useRainbowMode = false;  // New variable (replacing hybridColorMode and palette)
+// 2. Rainbow color mode variables
+boolean useRainbowMode = false;
 float rainbowSpeed = 0.5;        // Controls how fast the rainbow cycles
 float rainbowOffset = 0.0;       // Current position in the rainbow cycle
-float rainbowWidth = 120.0;      // Width of the spectrum used (higher = more color variety)
+float rainbowWidth = 120.0;      // Width of the spectrum used
 float rainbowFreqInfluence = 0.6; // How much frequencies affect the rainbow
 
 // Color system toggle
 boolean useScriabinColors = true; // True for Scriabin, False for Rainbow
 
-// Variables for chord detection with sustain
-float[] noteStrengths = new float[12]; // Strength of each of the 12 notes
+// ================ CHORD DETECTION VARIABLES ================
+
+float[] noteStrengths = new float[12]; // Strength of each of the 12 notes (C through B)
 int dominantNote = 0;                  // Most prominent note (0=C, 1=C#, etc)
 float chordChangeSmoothing = 0.1;      // How quickly colors change between chords
 color currentScriabinColor;            // Current color based on Scriabin system
 int lastChordChangeFrame = 0;          // When we last changed the dominant note
 int minChordDuration = 15;             // Minimum frames to hold a chord
-float dominantNoteSustain = 0.99;      // Very slow decay for dominant note (was 0.98)
-float otherNoteDecay = 0.85;           // Much faster decay for non-dominant notes (was 0.93)
-float noteFadeThreshold = 0.1;         // How low a note can fade before allowing change (was 0.3)
+float dominantNoteSustain = 0.99;      // Decay rate for dominant note
+float otherNoteDecay = 0.85;           // Decay rate for non-dominant notes
+float noteFadeThreshold = 0.1;         // Threshold for note fading
 int sustainCountdown = 0;              // Counter for extended sustain after note release
 
-// Energy detection variables for chorus/high-energy sections
+// ================ ENERGY DETECTION VARIABLES ================
+
 float sustainedEnergy = 0;
-float energyThreshold = 200;
+float energyThreshold = 1200;
 boolean highEnergySectionActive = false;
 int highEnergyCounter = 0;
 
-// Movement speed variables for ultrasonic sensor control
-float baseMovementSpeed = 0.6; // Reduced from 1.0 to make regular sections slower
-float currentMovementSpeed = 0.6; // Start at base speed
+// ================ MOVEMENT SPEED VARIABLES ================
+
+float baseMovementSpeed = 0.35; // Base movement speed multiplier
+float currentMovementSpeed = 0.35; // Current movement speed multiplier
 float movementSpeedTransition = 0.95; // Smooth transition between speed changes
 
 /**
- * Updated main loop with dramatically enhanced speed during chorus sections
- * This file has the setup(), draw(), and key handling functions
+ * Setup - Initialize audio, visual elements, and communication
  */
-
-/**
- * Updated main loop with dramatically enhanced speed during chorus sections
- * This file has the setup(), draw(), and key handling functions
- */
-
 void setup() {
-  // Lower energy threshold to detect chorus sections more easily
-  energyThreshold = 180; // Reduced from 200
+  // Set initial energy threshold for chorus detection
+  //energyThreshold = 1200;
   
   // Set initial speed values
-  baseMovementSpeed = 0.7;
-  currentMovementSpeed = 0.7;
+  baseMovementSpeed = 0.45;
+  currentMovementSpeed = 0.45;
   
   // Display in 3D, fullscreen
   fullScreen(P3D);
   
-  // Initialize Minim
+  // Initialize Minim audio library
   minim = new Minim(this);
   
-  // Load song
+  // Load song for music mode
   song = minim.loadFile("song.mp3");
   
-  // Set up microphone input (will be used when voice mode is active)
+  // Set up microphone input for voice mode
   microphone = minim.getLineIn(Minim.STEREO, 1024);
   
   // Initially create FFT for song (we'll switch between song and mic as needed)
@@ -177,14 +206,14 @@ void setup() {
   // Initialize beat detection
   prevSpectrum = new float[fft.specSize()];
   
-  // Initialize echo buffer
+  // Initialize echo buffer for audio memory effects
   echoBuffer = new float[ECHO_FRAMES][fft.specSize()];
   
-  // Determine number of visual elements to display
-  numEntities = (int)(fft.specSize() * BAND_HIGH / 2); // Using fewer entities
+  // Determine number of visual entities based on FFT bands
+  numEntities = (int)(fft.specSize() * BAND_HIGH / 2);
   entities = new Entity[numEntities];
   
-  // Create environment elements
+  // Create environment elements array
   elements = new EnvironmentElement[numEnvironmentElements];
   
   // Initialize visual elements
@@ -197,7 +226,7 @@ void setup() {
     stars[i] = new Star();
   }
 
-  // Set background
+  // Set initial background
   background(0);
   
   // Initialize Scriabin color
@@ -209,7 +238,7 @@ void setup() {
   // Initialize Arduino communication
   setupArduinoCommunication();
   
-  // Initialize parameter tracking
+  // Initialize parameter tracking for drift prevention
   initializeParameterTracking();
   
   // Force ultrasonic sensor debugging on startup
@@ -218,11 +247,14 @@ void setup() {
     println("Initial speed multiplier: " + nf(currentMovementSpeed, 1, 1) + "x");
   }
   
-  // Log energy threshold 
+  // Log energy threshold
   println("Energy threshold set to: " + energyThreshold);
   println("Starting in SCRIABIN COLOR MODE");
 }
 
+/**
+ * Main draw loop - Process audio and update visualization
+ */
 void draw() {
   // Check for and fix parameter drift
   checkAndFixParameterDrift();
@@ -234,17 +266,18 @@ void draw() {
     fft.forward(song.mix);
   }
   
-  // Update audio memory
+  // Update audio memory for echo effects
   updateEchoBuffer();
   
   // Calculate spectral flux and detect beats
   updateBeatDetection();
   
-  // If using Scriabin colors, detect the dominant chord/note
+  // Update color system
   if (useScriabinColors) {
+    // Detect the dominant chord/note for Scriabin colors
     detectChord();
   } else {
-    // For Rainbow mode, update rainbow offset
+    // For Rainbow mode, update the rainbow cycle position
     rainbowOffset += 0.01 * rainbowSpeed;
     if (rainbowOffset > 360) rainbowOffset = 0;
   }
@@ -256,25 +289,19 @@ void draw() {
   float rms = useVoiceInput ? microphone.mix.level() : song.mix.level();
   float globalIntensity = calculateGlobalIntensity(rms);
   
-  // Handle camera movement - now influenced by Arduino joystick
+  // Handle camera movement
   updateCamera(globalIntensity);
   
   // Set background color based on audio
   drawBackground(scoreLow, scoreLowMid, scoreMid, scoreHigh);
   
-  // Display indicators
+  // Display status indicators
   drawStatusIndicators(globalIntensity);
   
-  // Draw stars
+  // Draw visualization elements in order from background to foreground
   drawStars(globalIntensity);
-  
-  // Draw entities
   drawEntities(scoreLow, scoreLowMid, scoreMid, scoreHigh, globalIntensity);
-  
-  // Draw 3D wave effects
   drawWaveEffects(scoreLow, scoreLowMid, scoreMid, scoreHigh, globalIntensity);
-  
-  // Draw environment elements
   drawEnvironment(scoreLow, scoreLowMid, scoreMid, scoreHigh, globalIntensity);
   
   // Handle visual mode transitions

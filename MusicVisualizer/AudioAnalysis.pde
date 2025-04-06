@@ -1,5 +1,24 @@
 /**
+ * Audio_Analysis.pde - Advanced Audio Processing Algorithms
+ * 
+ * This file contains the core algorithms for audio analysis including:
+ * - Echo buffer management for audio memory effects
+ * - Musical note and chord detection with Scriabin color mapping
+ * - Beat detection using spectral flux algorithms
+ * - Frequency band analysis with custom weighting
+ * - Audio intensity calculation with energy detection
+ * - Color generation for visualization effects
+ * 
+ * The algorithms integrate music theory concepts, psychoacoustic principles,
+ * and signal processing techniques to create a responsive audio-visual experience.
+ */
+
+/**
  * Update the echo buffer with current FFT data
+ * Creates a temporal "memory" of recent audio spectra for echo effects
+ * 
+ * @global echoBuffer - 2D array storing recent FFT data
+ * @global echoIndex - Current position in the circular buffer
  */
 void updateEchoBuffer() {
   // Store current spectrum in echo buffer
@@ -7,12 +26,17 @@ void updateEchoBuffer() {
     echoBuffer[echoIndex][i] = fft.getBand(i);
   }
   
-  // Update buffer index
+  // Update buffer index using circular buffer pattern
   echoIndex = (echoIndex + 1) % ECHO_FRAMES;
 }
 
 /**
  * Calculate the echo effect for a specific frequency band
+ * Implements a custom decay algorithm that weights recent samples more heavily
+ * 
+ * @param bandIndex - The frequency band to calculate echo for
+ * @param decayFactor - Controls how quickly the echo fades (higher = faster decay)
+ * @return The calculated echo value for the specified band
  */
 float getEchoValue(int bandIndex, float decayFactor) {
   float echo = 0;
@@ -23,12 +47,17 @@ float getEchoValue(int bandIndex, float decayFactor) {
   return echo;
 }
 
-// Constants for chord detection
+// Constants for chord detection based on music theory
 final int NUM_OCTAVES = 8;    // Check notes across 8 octaves 
-final int NUM_NOTES = 12;     // 12 notes in Western music
+final int NUM_NOTES = 12;     // 12 notes in Western music (C through B)
 final float TUNING_A4 = 440;  // Standard tuning reference: A4 = 440 Hz
 
-// Manual calibration offsets to correct for observed misidentifications
+/**
+ * Manual calibration offsets to correct for observed misidentifications
+ * These values compensate for biases in FFT analysis and perceptual importance
+ * of different notes in typical music. For example, certain notes like D# are
+ * harder to detect and need boosting, while C can be over-detected and needs reduction.
+ */
 float[] noteCalibration = {
   0.5,   // C    - severely reduce to prevent over-detection and red bias
   1.5,   // C#   - boost to fix under-detection 
@@ -47,21 +76,37 @@ float[] noteCalibration = {
 /**
  * Perform advanced chord detection based on frequency analysis
  * Uses Scriabin's synesthesia color mapping with calibrated note detection and sustain
+ * 
+ * Algorithm overview:
+ * 1. Apply decay to previous note strengths with different rates for dominant vs other notes
+ * 2. Calculate frequencies for all notes across octaves using equal temperament formula
+ * 3. Analyze FFT spectrum to identify musical notes present in the signal
+ * 4. Apply calibration and perceptual weighting to note detection
+ * 5. Identify harmonic relationships to enhance chord detection
+ * 6. Apply temporal smoothing to create stable chord transitions
+ * 7. Determine when to change the dominant note based on multiple criteria
+ * 8. Update the Scriabin color based on the dominant note
+ * 
+ * @global noteStrengths - Array storing the strength of each of the 12 musical notes
+ * @global dominantNote - Currently dominant note (0=C, 1=C#, etc.)
+ * @global scriabinColors - Array of colors associated with each musical note according to Scriabin
+ * @global currentScriabinColor - Current color based on the dominant note
  */
 void detectChord() {
   // Apply different decay rates to the dominant note vs. other notes
   // This creates a "sustain" effect for the dominant note
   for (int i = 0; i < NUM_NOTES; i++) {
     if (i == dominantNote) {
-      // Slower decay for the dominant note
+      // Slower decay for the dominant note - creates note persistence
       noteStrengths[i] = noteStrengths[i] * dominantNoteSustain;
     } else {
-      // Faster decay for non-dominant notes
+      // Faster decay for non-dominant notes - reduces noise and competing notes
       noteStrengths[i] = noteStrengths[i] * otherNoteDecay;
     }
   }
   
   // Pre-calculate noteFrequencies for all notes in all octaves
+  // Uses the equal temperament formula: f = 2^(n/12) * reference frequency
   float[][] noteFreqs = new float[NUM_NOTES][NUM_OCTAVES];
   
   // Calculate each note frequency using equal temperament formula
@@ -108,7 +153,7 @@ void detectChord() {
         if (noteFreq <= 0) continue;
         
         // Calculate cents difference - standard musical interval measure
-        // 100 cents = 1 semitone
+        // 100 cents = 1 semitone, formula: cents = 1200 * log2(f1/f2)
         float cents = 1200 * log(freq/noteFreq)/log(2);
         float absCents = abs(cents);
         
@@ -173,6 +218,7 @@ void detectChord() {
   float[] harmonicBoost = new float[NUM_NOTES];
   
   // Common chord patterns to detect and enhance
+  // Each array contains the three notes that make up a common chord
   int[][] commonChords = {
     {0, 4, 7},    // C major (C-E-G)
     {4, 7, 11},   // E minor (E-G-B)
@@ -306,10 +352,7 @@ void detectChord() {
   // Apply the change if needed
   if (shouldChange) {
     String[] noteNames = {"C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"};
-    println("CHORD CHANGED to: " + noteNames[strongestNote] + 
-            " (Strength: " + nf(noteStrengths[strongestNote], 1, 2) + 
-            ", Previous: " + noteNames[dominantNote] + " " + 
-            nf(noteStrengths[dominantNote], 1, 2) + ")");
+    //println("CHORD CHANGED to: " + noteNames[strongestNote] + " (Strength: " + nf(noteStrengths[strongestNote], 1, 2) + ", Previous: " + noteNames[dominantNote] + " " + nf(noteStrengths[dominantNote], 1, 2) + ")");
     
     // Update the dominant note
     dominantNote = strongestNote;
@@ -337,7 +380,7 @@ void detectChord() {
     // Initialize on first frame
     currentScriabinColor = targetColor;
   } else {
-    // Apply the color transition
+    // Apply the color transition using linear interpolation
     float r = lerp(red(currentScriabinColor), red(targetColor), finalTransitionSpeed);
     float g = lerp(green(currentScriabinColor), green(targetColor), finalTransitionSpeed);
     float b = lerp(blue(currentScriabinColor), blue(targetColor), finalTransitionSpeed);
@@ -348,6 +391,21 @@ void detectChord() {
 
 /**
  * Update beat detection based on spectral flux
+ * 
+ * Algorithm overview:
+ * 1. Calculate spectral flux (sum of positive energy changes across spectrum)
+ * 2. Apply smoothing to reduce false positives
+ * 3. Track average flux with slow adaptation for threshold adjustment
+ * 4. Detect beats when flux exceeds dynamic threshold
+ * 5. Calculate beat intensity for visual effects
+ * 
+ * Uses different thresholds for voice vs. music input modes to account
+ * for different spectral characteristics.
+ * 
+ * @global spectralFlux - Current flux value
+ * @global averageFlux - Running average of flux for adaptive thresholding
+ * @global beatDetected - Flag indicating if a beat was detected in current frame
+ * @global beatIntensity - Strength of the detected beat (0.0-3.0)
  */
 void updateBeatDetection() {
   // Calculate spectral flux (sum of positive changes across spectrum)
@@ -391,6 +449,19 @@ void updateBeatDetection() {
 
 /**
  * Calculate weighted scores for different frequency bands
+ * 
+ * Divides the audio spectrum into frequency bands and applies
+ * custom weighting to emphasize different characteristics:
+ * - Low (bass): 0-5% of spectrum with emphasis on very low frequencies
+ * - Low-Mid: 5-15% of spectrum with bell curve weighting
+ * - Mid: 15-25% of spectrum with bell curve weighting
+ * - High: 25-40% of spectrum with emphasis on higher frequencies
+ * 
+ * Each band also includes echo effects to create audio "memory"
+ * and uses adaptive smoothing based on beat detection.
+ * 
+ * @global scoreLow, scoreLowMid, scoreMid, scoreHigh - Weighted scores for each band
+ * @global prevScoreLow, prevScoreLowMid, prevScoreMid, prevScoreHigh - Previous values for smoothing
  */
 void updateScores() {
   // Store previous scores
@@ -462,6 +533,21 @@ void updateScores() {
 /**
  * Calculate overall audio intensity with custom weighting
  * Enhanced for more dramatic response during high-energy sections
+ * 
+ * Uses different algorithms for voice vs. music input to account for
+ * their different characteristics:
+ * - Voice: Higher amplification, faster energy tracking, lower thresholds
+ * - Music: Stronger emphasis on RMS, more extreme boost during high-energy sections
+ * 
+ * Also includes detection of high-energy sections (like choruses) with
+ * different behavior for sustained high energy.
+ * 
+ * @param rms - Root Mean Square amplitude of the current audio frame
+ * @return The calculated global intensity value for visual scaling
+ * 
+ * @global sustainedEnergy - Tracks energy level over time for chorus detection
+ * @global highEnergySectionActive - Flag for chorus/high-energy mode
+ * @global highEnergyCounter - Counter for stable detection of high-energy sections
  */
 float calculateGlobalIntensity(float rms) {
   // For voice input, we need to adjust the intensity calculation
@@ -479,7 +565,7 @@ float calculateGlobalIntensity(float rms) {
     globalIntensity += (rms * 220);
     
     // Track sustained energy with faster adaptation for voice
-    sustainedEnergy = lerp(sustainedEnergy, globalIntensity, 0.18); // Increased from 0.15
+    sustainedEnergy = lerp(sustainedEnergy, globalIntensity, 0.12); // Increased from 0.15
     
     // Use a lower energy threshold for voice input
     float voiceEnergyThreshold = energyThreshold * 0.7;
@@ -499,7 +585,7 @@ float calculateGlobalIntensity(float rms) {
     
     // More moderate boost for voice high-energy sections
     if (highEnergySectionActive) {
-      globalIntensity *= 1.3; // Increased from 1.2 to 1.3
+      globalIntensity *= 1.5;
     }
     
     // Stronger beat reaction for voice to make it more responsive
@@ -550,6 +636,20 @@ float calculateGlobalIntensity(float rms) {
 /**
  * Generate a rainbow color based on audio analysis
  * Maps low frequencies to position in rainbow, uses mid and high for variations
+ * 
+ * Algorithm details:
+ * 1. Calculate base hue from rainbow cycle position and bass frequencies
+ * 2. Apply spreading effect based on mid frequencies
+ * 3. Adjust saturation based on high frequencies
+ * 4. Modulate brightness based on overall intensity and beat detection
+ * 5. Apply special effects for high energy sections
+ * 
+ * @param low - Low frequency band score
+ * @param lowMid - Low-mid frequency band score
+ * @param mid - Mid frequency band score
+ * @param high - High frequency band score
+ * @param intensity - Global intensity value
+ * @return The calculated rainbow color
  */
 color getRainbowColor(float low, float lowMid, float mid, float high, float intensity) {
   // Base hue determined by rainbow cycle position and bass frequencies

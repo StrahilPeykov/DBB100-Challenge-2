@@ -1,13 +1,37 @@
 /**
+ * Visual_Classes.pde
+ * 
+ * Contains the core visualization entities that form the visual representation
+ * of audio data. Each class responds to audio analysis data in unique ways,
+ * creating a layered, dynamic visualization system.
+ * 
+ * The visualization consists of three main element types:
+ * - Stars: Background elements creating a sense of movement through space
+ * - Entities: Mid-layer objects that respond directly to frequency bands
+ * - EnvironmentElements: Structural elements that form walls/boundaries
+ */
+
+/**
  * Star class for background effects
- * Updated to prevent drift and ensure consistent density
+ * Creates a 3D star field that responds to audio intensity and moves
+ * toward the viewer to create depth and motion.
  */
 class Star {
-  float x, y, z;
-  float brightness;
-  float size;
-  float originalSize; // Store original size to prevent drift
+  // Position in 3D space
+  private float x, y, z;
   
+  // Visual properties
+  private float brightness;
+  private float size;
+  private float originalSize; // Store original size to prevent drift
+  
+  // Movement bounds
+  private final float MIN_Z = -2500;
+  private final float MAX_Z = 100;
+  
+  /**
+   * Constructor - Creates a new star with random position and properties
+   */
   Star() {
     resetPosition();
     brightness = random(150, 255);
@@ -15,36 +39,44 @@ class Star {
     size = originalSize;
   }
   
-  // Reset star to a new random position
+  /**
+   * Reset star to a new random position
+   * Stars are distributed in a volume around the viewer
+   */
   void resetPosition() {
     x = random(-width*2, width*2);
     y = random(-height*2, height*2);
-    z = random(-2500, -100);
+    z = random(MIN_Z, -100);
   }
   
+  /**
+   * Update star position and properties based on audio and control input
+   * 
+   * @param intensity - Overall audio intensity value
+   * @param speedMultiplier - Movement speed multiplier (from Arduino)
+   */
   void update(float intensity, float speedMultiplier) {
-    // Move stars forward with speed influenced by audio and Arduino ultrasonic control
-    // Use different base speed for chorus vs regular sections
+    // Calculate base movement speed with different behavior for chorus sections
     float baseSpeed;
     if (highEnergySectionActive) {
       baseSpeed = 2 + (intensity * 0.008);
-      baseSpeed *= 2.3; // Make stars much faster during chorus
+      baseSpeed *= 2.3; // Faster during high energy sections
     } else {
-      baseSpeed = 0.9 + (intensity * 0.004); // Slower regular movement
+      baseSpeed = 0.5 + (intensity * 0.003); // Normal speed
     }
     
-    // Apply the Arduino sensor control (make sure this has an impact)
+    // Apply the Arduino speed control
     z += baseSpeed * speedMultiplier;
     
-    // Add subtle random variation to movement 
+    // Add subtle random variation for natural movement
     z += random(-0.5, 0.5);
     
-    // Pulse size with intensity but prevent drift with bounds
+    // Pulse size with intensity but prevent drift with constraints
     float pulseAmount = sin(frameCount * 0.1) * (intensity * 0.0002);
     size = constrain(originalSize + pulseAmount, originalSize * 0.5, originalSize * 1.5);
     
     // Reset when past camera with bounds check to prevent z-drift
-    if (z > 100) {
+    if (z > MAX_Z) {
       resetPosition();
       
       // Occasionally refresh brightness
@@ -53,15 +85,23 @@ class Star {
       }
     }
     
-    // Safety check - if z is somehow beyond bounds, reset
-    if (z < -3000 || z > 200) {
+    // Safety check - reset if position is outside expected bounds
+    if (z < MIN_Z || z > MAX_Z + 100) {
       resetPosition();
     }
   }
   
+  /**
+   * Display the star at its current position
+   * Uses different rendering methods based on distance
+   */
   void display() {
-    // Calculate apparent brightness based on distance with protection against extreme values
-    float apparentBrightness = map(constrain(z, -2500, 100), -2500, 100, brightness * 0.3, brightness);
+    // Calculate apparent brightness based on distance
+    float apparentBrightness = map(
+      constrain(z, MIN_Z, MAX_Z), 
+      MIN_Z, MAX_Z, 
+      brightness * 0.3, brightness
+    );
     
     pushMatrix();
     translate(width/2, height/2);
@@ -84,8 +124,9 @@ class Star {
 }
 
 /**
- * Entity class (formerly Meteor) - visual elements that respond to audio
- * Updated with drift protection and more dynamic movement
+ * Entity class - Audio-reactive visual elements
+ * These mid-layer objects respond to specific frequency bands and
+ * display different geometric shapes that pulse with the music.
  */
 class Entity {
   // Position bounds
@@ -94,21 +135,26 @@ class Entity {
   final float minZ = -12000; // Safety bound
   
   // Position and rotation
-  float x, y, z;
-  float spinX, spinY, spinZ;
-  float rotX, rotY, rotZ;
+  private float x, y, z;
+  private float spinX, spinY, spinZ;
+  private float rotX, rotY, rotZ;
   
   // Visual properties
-  float baseSize;
-  int shapeType;
+  private float baseSize;
+  private int shapeType;
   
-  // Constructor
+  /**
+   * Constructor - Creates a new entity at the specified position
+   * 
+   * @param x - X coordinate
+   * @param y - Y coordinate
+   */
   Entity(float x, float y) {
     this.x = x;
     this.y = y;
     this.z = random(startingZ, maxZ);
     
-    // Random rotation axes
+    // Random rotation axes for 3D movement
     spinX = random(-1, 1);
     spinY = random(-1, 1);
     spinZ = random(-1, 1);
@@ -120,16 +166,26 @@ class Entity {
     // Random base size
     baseSize = random(30, 70);
     
-    // Random shape type for variety
+    // Random shape type for visual variety
     shapeType = int(random(3));
   }
   
   /**
-   * Display the entity with audio reactivity and Arduino size control
+   * Display the entity with audio reactivity
+   * Shape, size, color and movement are all influenced by audio analysis
+   * 
+   * @param low - Low frequency band value
+   * @param lowMid - Low-mid frequency band value
+   * @param mid - Mid frequency band value
+   * @param high - High frequency band value
+   * @param intensity - Band-specific intensity value
+   * @param globalIntensity - Overall audio intensity
+   * @param isBeat - True if a beat was detected in current frame
+   * @param sizeControl - Size multiplier from Arduino (0-100)
    */
   void display(float low, float lowMid, float mid, float high, 
                float intensity, float globalIntensity, boolean isBeat, int sizeControl) {
-    // Color influenced by frequency bands, energy level, and current color system
+    // Determine color based on audio, energy level, and current color system
     color displayColor;
     
     if (isBeat && random(1) > 0.7) {
@@ -184,7 +240,7 @@ class Entity {
     // Position in 3D space
     translate(x, y, z);
     
-    // Update rotation - more complex formula than original
+    // Update rotation with audio-reactive movement
     rotX += intensity * (spinX / 800.0) + sin(frameCount * 0.01) * 0.01;
     rotY += intensity * (spinY / 800.0) + cos(frameCount * 0.015) * 0.01;
     rotZ += intensity * (spinZ / 800.0);
@@ -193,15 +249,15 @@ class Entity {
     rotateY(rotY);
     rotateZ(rotZ);
     
-    // Size affected by intensity and Arduino size control
+    // Calculate size with audio reactivity and Arduino control
     // Map Arduino size (0-100) to a scaling factor (0.5-2.0)
     float sizeScale = map(sizeControl, 0, 100, 0.5, 2.0);
     float currentSize = (baseSize + (intensity * 0.3) + sin(frameCount * 0.05) * 5) * sizeScale;
     
-    // Draw shape based on shape type
+    // Draw shape based on shape type for visual variety
     switch (shapeType) {
       case 0:
-        // Sphere - different from original cube
+        // Sphere
         sphereDetail(6);
         sphere(currentSize / 2);
         break;
@@ -220,7 +276,7 @@ class Entity {
     
     popMatrix();
     
-    // Update z position with enhanced speed scaling
+    // Update z position with audio-reactive speed
     float speedMultiplier = currentMovementSpeed;
 
     // Different scaling for chorus vs regular sections
@@ -228,11 +284,11 @@ class Entity {
       // Maintain extreme boost for chorus
       speedMultiplier *= 3.5; 
     } else {
-      // Regular sections 40% slower
-      speedMultiplier *= 0.45;
+      // Regular sections slower
+      speedMultiplier *= 0.3;
     }
     
-    // Beat response
+    // Enhanced movement on beats
     if (isBeat) {
       if (highEnergySectionActive) {
         speedMultiplier *= 1.5 + (beatIntensity * 0.5); // Strong in chorus
@@ -241,10 +297,10 @@ class Entity {
       }
     }
     
-    // Add random variation
+    // Add random variation for organic movement
     speedMultiplier *= 0.85 + random(0.3);
     
-    // More dramatic response to audio intensity
+    // Calculate final z movement with audio intensity
     float zMovement;
     if (highEnergySectionActive) {
       // Keep chorus sections very fast
@@ -254,10 +310,11 @@ class Entity {
       zMovement = speedMultiplier * (1.4 + (intensity / 2.5) + pow(globalIntensity / 150, 1.2));
     }
     
-    // Allow much higher max speed
+    // Apply speed limits for stability
     if (zMovement > 160) zMovement = 160;
     if (zMovement < 0.2) zMovement = 0.2;
     
+    // Apply movement
     z += zMovement;
     
     // Reset when past camera
@@ -265,7 +322,7 @@ class Entity {
       float dist = random(100, 300);
       float angle = random(TWO_PI);
       
-      // Some centered, some spread out
+      // Some centered, some spread out for visual variety
       if (random(1) > 0.3) {
         // Distributed in a ring pattern
         x = width/2 + cos(angle) * dist;
@@ -284,7 +341,7 @@ class Entity {
       }
     }
     
-    // Safety check - if somehow got pushed too far back
+    // Safety check for z-position
     if (z < minZ) {
       z = startingZ;
     }
@@ -292,6 +349,9 @@ class Entity {
   
   /**
    * Draw a tetrahedron shape
+   * Creates a custom 3D shape for visual variety
+   * 
+   * @param s - Size of the tetrahedron
    */
   void drawTetrahedron(float s) {
     // Define vertices of tetrahedron
@@ -324,36 +384,45 @@ class Entity {
 }
 
 /**
- * EnvironmentElement class (formerly Wall)
- * Updated with drift protection and extreme speed enhancements
+ * EnvironmentElement class - Structural elements that form the visualizer environment
+ * These elements create the walls, boundaries or circular structures that
+ * contain the visualization, reacting to audio with color and movement.
  */
 class EnvironmentElement {
   // Position bounds
-  final float startingZ = -9000; // Now a constant
-  final float maxZ = 100;        // Now a constant
-  final float minZ = -15000;     // Added minimum bound to catch extreme values
+  final float startingZ = -9000;
+  final float maxZ = 100;
+  final float minZ = -15000;  // Safety bound for extreme values
   
   // Position and dimensions
-  float x, y, z;
-  float sizeX, sizeY;
-  float targetX, targetY;
-  float targetSizeX, targetSizeY;
+  private float x, y, z;
+  private float sizeX, sizeY;
+  private float targetX, targetY;
+  private float targetSizeX, targetSizeY;
   
   // Original values to prevent drift
-  float originalSizeX, originalSizeY;
+  private float originalSizeX, originalSizeY;
   
   // Movement and rotation parameters
-  float moveSpeed;
-  float angle;
-  float targetAngle;
-  float tiltAngle;
-  float pulseRate;
+  private float moveSpeed;
+  private float angle;
+  private float targetAngle;
+  private float tiltAngle;
+  private float pulseRate;
   
   // Element lifecycle tracking
-  int frameCreated;
-  int resetCount = 0;
+  private int frameCreated;
+  private int resetCount = 0;
   
-  // Constructors
+  /**
+   * Constructor - Creates a new environment element with position, size and angle
+   * 
+   * @param x - X coordinate
+   * @param y - Y coordinate
+   * @param sizeX - Width
+   * @param sizeY - Height
+   * @param angle - Initial rotation angle
+   */
   EnvironmentElement(float x, float y, float sizeX, float sizeY, float angle) {
     this.x = x;
     this.y = y;
@@ -373,36 +442,46 @@ class EnvironmentElement {
     this.targetAngle = angle;
     this.tiltAngle = random(-0.15, 0.15);
     
-    this.moveSpeed = random(0.6, 1.8); // Different speed range
+    this.moveSpeed = random(0.6, 1.8);
     this.pulseRate = random(0.03, 0.08);
     
     this.frameCreated = frameCount;
   }
   
-  // Constructor for backward compatibility
+  /**
+   * Alternative constructor for backward compatibility
+   */
   EnvironmentElement(float x, float y, float sizeX, float sizeY) {
     this(x, y, sizeX, sizeY, 0);
   }
   
   /**
    * Update position smoothly
+   * Creates smooth transitions when moving between positions or modes
+   * 
+   * @param newX - Target X coordinate
+   * @param newY - Target Y coordinate
+   * @param newAngle - Target rotation angle
    */
   void updatePosition(float newX, float newY, float newAngle) {
     this.targetX = newX;
     this.targetY = newY;
     this.targetAngle = newAngle;
     
-    // Smoother transition with different lerp factor
+    // Smooth position transition
     this.x = lerp(this.x, targetX, 0.04);
     this.y = lerp(this.y, targetY, 0.04);
     this.angle = lerp(this.angle, targetAngle, 0.04);
     
-    // Dynamic tilt angle based on sine wave
+    // Dynamic tilt animation
     this.tiltAngle = sin(frameCount * 0.008 + angle) * 0.12;
   }
   
   /**
    * Update size smoothly with drift protection
+   * 
+   * @param newSizeX - Target width
+   * @param newSizeY - Target height
    */
   void updateSize(float newSizeX, float newSizeY) {
     // Store original size for safe reset if needed
@@ -414,11 +493,11 @@ class EnvironmentElement {
     this.targetSizeX = newSizeX;
     this.targetSizeY = newSizeY;
     
-    // Smooth transition
+    // Smooth size transition
     this.sizeX = lerp(this.sizeX, targetSizeX, 0.04);
     this.sizeY = lerp(this.sizeY, targetSizeY, 0.04);
     
-    // Protect against extreme size values that could cause elements to effectively disappear
+    // Protect against extreme size values
     if (this.sizeX < 1 || this.sizeY < 1 || this.sizeX > 500 || this.sizeY > 500) {
       resetSize();
     }
@@ -426,6 +505,7 @@ class EnvironmentElement {
   
   /**
    * Reset to original size values
+   * Prevents drift and ensures elements remain visible
    */
   void resetSize() {
     this.sizeX = this.originalSizeX;
@@ -436,20 +516,31 @@ class EnvironmentElement {
   
   /**
    * Reset element to new starting position
+   * Called when element passes beyond view or needs repositioning
    */
   void resetElement() {
-    this.z = random(startingZ, startingZ * 0.8); // Start further back
+    this.z = random(startingZ, startingZ * 0.8);
     resetCount++;
   }
   
   /**
    * Display the element with audio reactivity
-   * Added Arduino size control and extreme speed control parameters
+   * Creates visual representation with color and size influenced by audio
+   * 
+   * @param low - Low frequency band value
+   * @param lowMid - Low-mid frequency band value
+   * @param mid - Mid frequency band value
+   * @param high - High frequency band value
+   * @param intensity - Band-specific intensity value
+   * @param globalIntensity - Overall audio intensity
+   * @param isBeat - True if a beat was detected in current frame
+   * @param sizeControl - Size multiplier from Arduino (0-100)
+   * @param speedMultiplier - Movement speed multiplier
    */
   void display(float low, float lowMid, float mid, float high, 
                float intensity, float globalIntensity, boolean isBeat,
                int sizeControl, float speedMultiplier) {
-    // Get the main wall color based on selected color system
+    // Determine color based on audio and selected color system
     color displayColor;
     
     if (isBeat && random(1) > 0.8) {
@@ -477,7 +568,7 @@ class EnvironmentElement {
       }
     }
     
-    // Pulsing movement based on audio (with bounds checking)
+    // Create pulsing movement based on audio
     float offsetX = sin(frameCount * 0.01 * moveSpeed) * (constrain(sizeX, 5, 100) / 3);
     float offsetY = cos(frameCount * 0.015 * moveSpeed) * (constrain(sizeY, 5, 100) / 3);
     
@@ -497,14 +588,14 @@ class EnvironmentElement {
     rotateZ(angle);
     rotateX(tiltAngle);
     
-    // Pulse size with audio (with bounds checking)
+    // Pulse size with audio
     float pulseX = sin(frameCount * pulseRate) * intensity * 0.1;
     float pulseY = cos(frameCount * pulseRate) * intensity * 0.1;
     
-    // Map Arduino size control (0-100) to a scaling factor (0.5-2.0)
+    // Apply Arduino size control (0-100) to scaling factor (0.5-2.0)
     float sizeScale = map(sizeControl, 0, 100, 0.5, 2.0);
     
-    // Dynamic shape based on mode transition with Arduino size influence
+    // Calculate final dimensions
     float boxSizeX = constrain(sizeX * (1 + pulseX), 1, 500) * sizeScale;
     float boxSizeY = constrain(sizeY * (1 + pulseY), 1, 500) * sizeScale;
     float boxSizeZ = constrain((10 + intensity * 0.2), 1, 50) * sizeScale;
@@ -514,42 +605,38 @@ class EnvironmentElement {
     
     popMatrix();
     
-    // SUPER-BOOSTED SPEED CALCULATION - Much closer to original
-    // But with lower base speed for non-chorus sections
+    // Calculate movement speed with different behavior for high-energy sections
     float baseSpeed;
     
-    // Use different base calculation for chorus vs normal sections
     if (highEnergySectionActive) {
-      // Maintain extremely fast chorus speed
+      // Fast speed during chorus
       baseSpeed = pow(globalIntensity / 140.0, 1.4);
-      
-      // Ultra boost during chorus
-      baseSpeed *= 3.3; // Increased from 3.0 to 3.3
+      baseSpeed *= 3.3;
     } else {
-      // Slower base speed for regular sections
-      baseSpeed = pow(globalIntensity / 150.0, 1.35) * 0.6; // 40% reduction for regular sections
+      // Slower speed during regular sections
+      baseSpeed = pow(globalIntensity / 150.0, 1.35) * 0.4;
     }
     
-    // Apply user control through Arduino (ultrasonic sensor)
+    // Apply Arduino control multiplier
     float envSpeed = baseSpeed * speedMultiplier; 
     
-    // Stronger beat response for dramatic movement
+    // Enhance speed on beats
     if (isBeat) {
       if (highEnergySectionActive) {
-        envSpeed *= 1.6 + (beatIntensity * 0.5); // Maintain strong beat boost in chorus
+        envSpeed *= 1.6 + (beatIntensity * 0.5); // Strong in chorus
       } else {
-        envSpeed *= 1.3 + (beatIntensity * 0.3); // Slightly reduced for regular sections
+        envSpeed *= 1.3 + (beatIntensity * 0.3); // Gentler in regular sections
       }
     }
     
-    // Add randomness for varied movement
+    // Add randomness for variety
     envSpeed *= 0.85 + random(0.3);
     
-    // Allow MUCH higher speed limit
+    // Apply speed limits
     if (envSpeed > 200) envSpeed = 200;
     if (envSpeed < 0.1) envSpeed = 0.1;
     
-    // Apply speed
+    // Apply movement
     z += envSpeed;
     
     // Reset when past camera
@@ -563,7 +650,7 @@ class EnvironmentElement {
       }
     }
     
-    // Safety check: If an element somehow gets too far back, reset it
+    // Safety check for extreme z positions
     if (z < minZ) {
       z = startingZ;
     }

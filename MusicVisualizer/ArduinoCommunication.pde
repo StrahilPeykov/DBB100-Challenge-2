@@ -1,9 +1,28 @@
 /**
+ * Arduino_Communication.pde
+ * 
+ * Handles bidirectional communication with the Arduino controller.
+ * This module establishes a serial connection with the Arduino,
+ * processes incoming sensor and control data, and applies the received
+ * values to visualization parameters. It also sends state information
+ * back to the Arduino to maintain synchronization.
+ * 
+ * The Arduino provides:
+ * - Size and density control via rotary encoder
+ * - Visual mode selection
+ * - Audio input mode selection (MP3/Voice)
+ * - Camera control via joystick
+ * - Speed control via ultrasonic distance sensor
+ */
+
+/**
  * Setup Arduino communication
+ * Initializes serial connection to the Arduino and handles
+ * connection errors gracefully.
  */
 void setupArduinoCommunication() {
   try {
-    // List all available serial ports
+    // List all available serial ports for debugging
     println("Available serial ports:");
     for (int i = 0; i < Serial.list().length; i++) {
       println(i + ": " + Serial.list()[i]);
@@ -24,6 +43,10 @@ void setupArduinoCommunication() {
 
 /**
  * Process incoming serial data from Arduino
+ * Parses structured messages containing sensor and control values
+ * and applies them to visualization parameters.
+ * 
+ * @param port - The Serial port from which data was received
  */
 void serialEvent(Serial port) {
   // Read the incoming data
@@ -89,6 +112,7 @@ void serialEvent(Serial port) {
 
 /**
  * Apply joystick control to camera rotation
+ * Converts joystick position to camera movement flags
  */
 void processJoystickControl() {
   // Reset rotation flags
@@ -116,6 +140,8 @@ void processJoystickControl() {
 
 /**
  * Process ultrasonic distance for speed control
+ * Maps distance readings to movement speed with an exponential curve
+ * for more intuitive control.
  */
 void processDistanceSensor() {
   // Only update if we have a valid distance reading
@@ -155,8 +181,10 @@ void processDistanceSensor() {
     }
   }
 }
+
 /**
  * Adjust particle count based on Arduino density control
+ * Maps density control value to star count with range limits
  */
 void adjustParticleCount() {
   // Map density control (0-100) to desired star count
@@ -191,6 +219,8 @@ void adjustParticleCount() {
 
 /**
  * Toggle between voice and music input
+ * Handles the transition between microphone and MP3 playback,
+ * including FFT reconfiguration and parameter adjustments.
  */
 void toggleVoiceInput() {
   // Toggle between voice (microphone) input and music (MP3) input

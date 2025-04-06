@@ -1,5 +1,17 @@
 /**
+ * Camera_Visual_Methods.pde
+ * 
+ * Contains methods for camera control and visual rendering of the 3D environment.
+ * These methods handle the initialization, updating, and display of visual elements,
+ * as well as camera movement, transitions between visual modes, and user input handling.
+ * 
+ * The visualization system uses layers of elements (stars, entities, environment elements)
+ * that move through 3D space while responding to audio analysis and user input.
+ */
+
+/**
  * Initialize visual entities with different spawn patterns
+ * Creates a non-uniform distribution of visual elements in 3D space
  */
 void initializeEntities() {
   for (int i = 0; i < numEntities; i++) {
@@ -7,7 +19,7 @@ void initializeEntities() {
     float dist = random(100, 300);
     float angle = random(TWO_PI);
     
-    // Some centered, some spread out
+    // Some centered, some spread out for visual variety
     float x, y;
     if (random(1) > 0.3) {
       // Distributed in a ring pattern
@@ -25,42 +37,44 @@ void initializeEntities() {
 
 /**
  * Initialize environment elements with different patterns
+ * Creates structural elements around the edges and within the visualization space
  */
 void initializeEnvironment() {
   // Create elements with a mix of behaviors
   for (int i = 0; i < numEnvironmentElements; i++) {
     float angle = map(i, 0, numEnvironmentElements, 0, TWO_PI);
     
-    int positionType = i % 5; // Using 5 types instead of 4
+    int positionType = i % 5; // Five different position types
     float x = 0, y = 0;
     float sizeX = 0, sizeY = 0;
     
+    // Position and size based on element type
     switch (positionType) {
-      case 0: // Left
+      case 0: // Left wall elements
         x = 0;
         y = height/2 + sin(angle * 3) * (height/4);
         sizeX = 8 + sin(angle * 2) * 4;
         sizeY = 100 + cos(angle) * 20;
         break;
-      case 1: // Right
+      case 1: // Right wall elements
         x = width;
         y = height/2 + sin(angle * 3) * (height/4);
         sizeX = 8 + sin(angle * 2) * 4;
         sizeY = 100 + cos(angle) * 20;
         break;
-      case 2: // Bottom
+      case 2: // Bottom wall elements
         x = width/2 + sin(angle * 3) * (width/4);
         y = height;
         sizeX = 100 + cos(angle) * 20;
         sizeY = 8 + sin(angle * 2) * 4;
         break;
-      case 3: // Top
+      case 3: // Top wall elements
         x = width/2 + sin(angle * 3) * (width/4);
         y = 0;
         sizeX = 100 + cos(angle) * 20;
         sizeY = 8 + sin(angle * 2) * 4;
         break;
-      case 4: // Floating elements (new type)
+      case 4: // Floating elements
         x = width/2 + cos(angle) * (width/3);
         y = height/2 + sin(angle) * (height/3);
         sizeX = 20 + sin(angle * 7) * 10;
@@ -73,7 +87,8 @@ void initializeEnvironment() {
 }
 
 /**
- * Reset camera position
+ * Reset camera position to default
+ * Called when user presses reset button or joystick button
  */
 void resetCamera() {
   cameraAngle = 0;
@@ -81,7 +96,9 @@ void resetCamera() {
 }
 
 /**
- * Update camera with Arduino joystick input
+ * Update camera with Arduino joystick input and audio reactivity
+ * 
+ * @param globalIntensity - Overall audio intensity for subtle camera movement
  */
 void updateCamera(float globalIntensity) {
   // Handle manual rotation input (from keyboard or Arduino joystick)
@@ -100,33 +117,33 @@ void updateCamera(float globalIntensity) {
   
   // Only apply automatic movements in auto mode
   if (autoMode) {
-    // Very gentle auto-rotation (much slower than before)
+    // Very gentle auto-rotation
     float baseRotation = 0.0005;
     
-    // Add extremely subtle movement based on audio (reduced by 90%)
+    // Add extremely subtle movement based on audio
     float audioSway = sin(frameCount * 0.003) * (globalIntensity * 0.00002);
     
     // Combine base rotation with audio influence
     cameraAngle += baseRotation + audioSway;
     
-    // Use much gentler vertical movement (reduced by 75%)
+    // Use gentle vertical movement
     float baseVertical = sin(frameCount * 0.001) * 0.0005;
     verticalAngle = constrain(verticalAngle + baseVertical, -0.1, 0.1); // Limited range
     
-    // Only add minimal camera response on strong beats
+    // Add minimal camera response on strong beats
     if (beatDetected) {
-      // Very small camera adjustment based on beat intensity
+      // Small camera adjustment based on beat intensity
       float beatResponse = map(beatIntensity, 0, 3, 0.0005, 0.002);
       verticalAngle += beatResponse * sin(frameCount * 0.03);
     }
   }
 
-  // Set up camera
+  // Set up camera position
   float camX = width/2; 
   float camY = height/2;
   float camZ = 500;
   
-  // Look direction
+  // Calculate look direction
   float lookX = camX;
   float lookY = camY + sin(verticalAngle) * 100;
   float lookZ = camZ - 500 + cos(verticalAngle) * 100;
@@ -141,7 +158,13 @@ void updateCamera(float globalIntensity) {
 }
 
 /**
- * Draw the background with subtle color variations
+ * Draw the background with subtle color variations based on audio
+ * Creates a color backdrop that responds to frequency bands
+ * 
+ * @param low - Low frequency band value
+ * @param lowMid - Low-mid frequency band value
+ * @param mid - Mid frequency band value
+ * @param high - High frequency band value
  */
 void drawBackground(float low, float lowMid, float mid, float high) {
   float r, g, b;
@@ -170,8 +193,10 @@ void drawBackground(float low, float lowMid, float mid, float high) {
 
 /**
  * Draw status indicators with Arduino information
+ * Provides visual feedback on system state, sensors, and controls
+ * 
+ * @param globalIntensity - Overall audio intensity for status indicators
  */
-// Enhanced status indicators to better show high energy state
 void drawStatusIndicators(float globalIntensity) {
   pushMatrix();
   hint(DISABLE_DEPTH_TEST); // Ensure text displays on top
@@ -205,9 +230,9 @@ void drawStatusIndicators(float globalIntensity) {
     text("MUSIC INPUT", 20, 60);
   }
   
-  // Ultrasonic sensor status debug display
+  // Ultrasonic sensor status display
   if (arduinoConnected) {
-    // Show ultrasonic sensor status more prominently
+    // Show ultrasonic sensor status
     fill(50, 200, 255, 220);
     textSize(14);
     text("ULTRASONIC:", 20, 90);
@@ -215,7 +240,7 @@ void drawStatusIndicators(float globalIntensity) {
     
     // Visual indicator of speed multiplier
     fill(50, 200, 255, 180);
-    float speedBarWidth = map(currentMovementSpeed, 0.6, 6.0, 10, 150); // Updated range from 5.0 to 6.0
+    float speedBarWidth = map(currentMovementSpeed, 0.6, 6.0, 10, 150);
     rect(120, 95, speedBarWidth, 5);
     
     // Show current speed
@@ -223,14 +248,14 @@ void drawStatusIndicators(float globalIntensity) {
     textSize(15); // reset size
   }
   
-  // High energy indicator - more prominent
+  // High energy indicator
   if (highEnergySectionActive) {
-    fill(255, 180, 50, 200); // More opaque
-    textSize(18); // Larger
+    fill(255, 180, 50, 200);
+    textSize(18);
     text("HIGH ENERGY", width - 140, 30);
-    textSize(15); // Reset size
+    textSize(15);
     
-    // Add energy meter to debug
+    // Add energy meter
     fill(255, 180, 50, 150);
     float energyRatio = sustainedEnergy / energyThreshold;
     rect(width - 140, 35, 120 * constrain(energyRatio, 0, 1.5), 5);
@@ -284,10 +309,11 @@ void drawStatusIndicators(float globalIntensity) {
   popMatrix();
 }
 
-
-
 /**
  * Draw and update stars
+ * Renders the background star field with audio reactivity
+ * 
+ * @param globalIntensity - Overall audio intensity
  */
 void drawStars(float globalIntensity) {
   for (Star s : stars) {
@@ -297,7 +323,14 @@ void drawStars(float globalIntensity) {
 }
 
 /**
- * Draw entities (renamed from meteors)
+ * Draw entities (foreground objects)
+ * Renders the mid-layer visual objects that respond to audio
+ * 
+ * @param low - Low frequency band value
+ * @param lowMid - Low-mid frequency band value
+ * @param mid - Mid frequency band value
+ * @param high - High frequency band value
+ * @param globalIntensity - Overall audio intensity
  */
 void drawEntities(float low, float lowMid, float mid, float high, float globalIntensity) {
   for (int i = 0; i < numEntities; i++) {
@@ -315,17 +348,24 @@ void drawEntities(float low, float lowMid, float mid, float high, float globalIn
 
 /**
  * Draw 3D wave effects
+ * Creates flowing wave patterns that respond to audio
+ * 
+ * @param low - Low frequency band value
+ * @param lowMid - Low-mid frequency band value
+ * @param mid - Mid frequency band value
+ * @param high - High frequency band value
+ * @param globalIntensity - Overall audio intensity
  */
 void drawWaveEffects(float low, float lowMid, float mid, float high, float globalIntensity) {
   // Base amplitude affected by global intensity
   float baseAmp = 120 + (globalIntensity * 0.6);
-  float waveFreq = 0.012; // Changed from 0.015
-  float waveSpeed = 0.04; // Changed from 0.05
+  float waveFreq = 0.012;
+  float waveSpeed = 0.04;
   
-  int segments = 70;  // Fewer segments
-  int depth = 5000;   // Less depth
+  int segments = 70;
+  int depth = 5000;
   
-  strokeWeight(1.5 + (globalIntensity / 180.0)); // Thinner lines
+  strokeWeight(1.5 + (globalIntensity / 180.0));
   noFill();
   
   // Handle transition between modes
@@ -359,24 +399,32 @@ void drawWaveEffects(float low, float lowMid, float mid, float high, float globa
 
 /**
  * Draw a custom wave pattern - modified version of sine wave
- */
-/**
- * Fix for wave effects - these need consistent bounds
- * Replace or modify the drawCustomWave and drawSpiralWaves methods
+ * Creates dynamic wave patterns along the sides of the visualization
+ * 
+ * @param xPos - X position of the wave
+ * @param baseAmp - Base amplitude
+ * @param segments - Number of segments in the wave
+ * @param depth - Z-depth of the wave
+ * @param waveFreq - Wave frequency
+ * @param waveSpeed - Wave speed
+ * @param freqLow - Low frequency value for color
+ * @param freqHigh - High frequency value for color
+ * @param opacity - Opacity multiplier for transition
+ * @param globalIntensity - Overall audio intensity
  */
 void drawCustomWave(float xPos, float baseAmp, int segments, int depth, 
                   float waveFreq, float waveSpeed, float freqLow, float freqHigh, 
                   float opacity, float globalIntensity) {
   
-  // FIX: Apply strict bounds to amplitude
+  // Apply strict bounds to amplitude
   baseAmp = constrain(baseAmp, 50, 200);
   
-  // FIX: Constrain the wave frequency and speed
+  // Constrain the wave frequency and speed
   waveFreq = constrain(waveFreq, 0.005, 0.03);
   waveSpeed = constrain(waveSpeed, 0.01, 0.1);
   
   for (int j = 0; j < 2; j++) {  // Draw fewer layers
-    float layerOffset = j * 0.4;  // Different offset
+    float layerOffset = j * 0.4;
     
     beginShape();
     for (int i = 0; i <= segments; i++) {
@@ -389,7 +437,7 @@ void drawCustomWave(float xPos, float baseAmp, int segments, int depth,
       // Different x-factor calculation
       float xFactor = pow(map(abs(xPos - width/2), 0, width/2, 0.6, 1.0), 1.2);
       
-      // FIX: Apply strict bounds to wave amplitude
+      // Apply strict bounds to wave amplitude
       float waveAmp = constrain(baseAmp * shrink * xFactor, 0, 300);
       
       // Modified waveform - triple sine wave
@@ -405,7 +453,7 @@ void drawCustomWave(float xPos, float baseAmp, int segments, int depth,
       // Different wave function - combines sine and cosine
       float depthFactor = map(z, -depth, 50, 0.4, 1.2);
       
-      // FIX: Apply consistent timescale to avoid accumulated drift
+      // Apply consistent timescale to avoid accumulated drift
       float timeComponent = (frameCount % 10000) * waveSpeed + layerOffset;
       
       float y = height/2 + 
@@ -413,7 +461,24 @@ void drawCustomWave(float xPos, float baseAmp, int segments, int depth,
                 waveAmp * 0.3 * cos(z * waveFreq * 2 * depthFactor + timeComponent * 1.5) +
                 waveformInfluence;
       
-      // [color calculations remain the same]
+      // Calculate color based on audio and current color system
+      if (useScriabinColors) {
+        stroke(
+          red(currentScriabinColor) * 0.5 + 255 * 0.5, 
+          green(currentScriabinColor) * 0.4 + (110 + freqLow * 0.6) * 0.6, 
+          blue(currentScriabinColor) * 0.4 + (160 + freqHigh * 0.6) * 0.6, 
+          fade * opacity
+        );
+      } else {
+        // Rainbow color mode
+        color rainbowColor = getRainbowColor(freqLow/2, freqLow, freqHigh/2, freqHigh, 40);
+        stroke(
+          red(rainbowColor) * 0.4 + 255 * 0.6, 
+          green(rainbowColor) * 0.4 + (110 + freqLow * 0.6) * 0.6, 
+          blue(rainbowColor) * 0.4 + (160 + freqHigh * 0.6) * 0.6, 
+          fade * opacity
+        );
+      }
       
       vertex(xPos, y, z);
     }
@@ -423,6 +488,14 @@ void drawCustomWave(float xPos, float baseAmp, int segments, int depth,
 
 /**
  * Draw spiral waves
+ * Creates spiral wave patterns for circular mode
+ * 
+ * @param radius - Base radius of the spiral
+ * @param baseAmp - Base amplitude
+ * @param freqMid - Mid frequency value for color
+ * @param freqHigh - High frequency value for color
+ * @param opacity - Opacity multiplier for transition
+ * @param globalIntensity - Overall audio intensity
  */
 void drawSpiralWaves(float radius, float baseAmp, float freqMid, float freqHigh, 
                      float opacity, float globalIntensity) {
@@ -437,7 +510,7 @@ void drawSpiralWaves(float radius, float baseAmp, float freqMid, float freqHigh,
     
     for (int d = 0; d < depths.length; d++) {
       float z = depths[d];
-      float shrink = map(z, 0, -4000, 1.0, 0.35);  // Different shrink factor
+      float shrink = map(z, 0, -4000, 1.0, 0.35);
       float currentRadius = radius * shrink;
       float fade = map(z, 0, -4000, 190, 40);
       
@@ -496,6 +569,13 @@ void drawSpiralWaves(float radius, float baseAmp, float freqMid, float freqHigh,
 
 /**
  * Draw environment elements with transition support
+ * Renders the structural elements of the visualization
+ * 
+ * @param low - Low frequency band value
+ * @param lowMid - Low-mid frequency band value
+ * @param mid - Mid frequency band value
+ * @param high - High frequency band value
+ * @param globalIntensity - Overall audio intensity
  */
 void drawEnvironment(float low, float lowMid, float mid, float high, float globalIntensity) {
   // Update transition progress if transitioning
@@ -583,10 +663,7 @@ void drawEnvironment(float low, float lowMid, float mid, float high, float globa
 
 /**
  * Update transition between rectangular and circular modes
- */
-/**
- * Fix for transition to ensure it never gets stuck
- * Replace or modify the updateTransition method
+ * Handles smooth transition between visual modes
  */
 void updateTransition() {
   if (transitioning) {
@@ -608,7 +685,7 @@ void updateTransition() {
       }
     }
     
-    // FIX: Safety timeout - never let transitions take more than 2 seconds
+    // Safety timeout - never let transitions take more than 2 seconds
     if (frameCount % 120 == 0 && transitioning) { // After 2 seconds (at 60fps)
       // Force completion of stuck transition
       if (isCircularMode) {
@@ -621,6 +698,11 @@ void updateTransition() {
     }
   }
 }
+
+/**
+ * Handle keyboard input
+ * Process key presses for camera and visualization control
+ */
 void keyPressed() {
   // Camera rotation controls using arrow keys
   if (keyCode == LEFT) {
@@ -677,6 +759,10 @@ void keyPressed() {
   handleDebugKeys(key);
 }
 
+/**
+ * Handle keyboard release
+ * Process key releases for camera control
+ */
 void keyReleased() {
   if (keyCode == LEFT) {
     rotateLeft = false;
