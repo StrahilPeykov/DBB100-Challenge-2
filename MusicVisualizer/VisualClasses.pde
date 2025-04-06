@@ -1,5 +1,5 @@
 /**
- * Visual_Classes.pde
+ * VisualClasses.pde
  * 
  * Contains the core visualization entities that form the visual representation
  * of audio data. Each class responds to audio analysis data in unique ways,
@@ -12,7 +12,7 @@
  */
 
 /**
- * Star class for background effects
+ * Star class for background effects.
  * Creates a 3D star field that responds to audio intensity and moves
  * toward the viewer to create depth and motion.
  */
@@ -40,8 +40,8 @@ class Star {
   }
   
   /**
-   * Reset star to a new random position
-   * Stars are distributed in a volume around the viewer
+   * Resets star to a new random position.
+   * Stars are distributed in a volume around the viewer.
    */
   void resetPosition() {
     x = random(-width*2, width*2);
@@ -50,10 +50,10 @@ class Star {
   }
   
   /**
-   * Update star position and properties based on audio and control input
+   * Updates star position and properties based on audio and control input.
    * 
-   * @param intensity - Overall audio intensity value
-   * @param speedMultiplier - Movement speed multiplier (from Arduino)
+   * @param intensity Overall audio intensity value
+   * @param speedMultiplier Movement speed multiplier (from Arduino)
    */
   void update(float intensity, float speedMultiplier) {
     // Calculate base movement speed with different behavior for chorus sections
@@ -92,8 +92,8 @@ class Star {
   }
   
   /**
-   * Display the star at its current position
-   * Uses different rendering methods based on distance
+   * Displays the star at its current position.
+   * Uses different rendering methods based on distance.
    */
   void display() {
     // Calculate apparent brightness based on distance
@@ -124,7 +124,7 @@ class Star {
 }
 
 /**
- * Entity class - Audio-reactive visual elements
+ * Entity class - Audio-reactive visual elements.
  * These mid-layer objects respond to specific frequency bands and
  * display different geometric shapes that pulse with the music.
  */
@@ -135,7 +135,7 @@ class Entity {
   final float minZ = -12000; // Safety bound
   
   // Position and rotation
-  private float x, y, z;
+  float x, y, z;
   private float spinX, spinY, spinZ;
   private float rotX, rotY, rotZ;
   
@@ -144,10 +144,10 @@ class Entity {
   private int shapeType;
   
   /**
-   * Constructor - Creates a new entity at the specified position
+   * Constructor - Creates a new entity at the specified position.
    * 
-   * @param x - X coordinate
-   * @param y - Y coordinate
+   * @param x X coordinate
+   * @param y Y coordinate
    */
   Entity(float x, float y) {
     this.x = x;
@@ -171,17 +171,17 @@ class Entity {
   }
   
   /**
-   * Display the entity with audio reactivity
-   * Shape, size, color and movement are all influenced by audio analysis
+   * Displays the entity with audio reactivity.
+   * Shape, size, color and movement are all influenced by audio analysis.
    * 
-   * @param low - Low frequency band value
-   * @param lowMid - Low-mid frequency band value
-   * @param mid - Mid frequency band value
-   * @param high - High frequency band value
-   * @param intensity - Band-specific intensity value
-   * @param globalIntensity - Overall audio intensity
-   * @param isBeat - True if a beat was detected in current frame
-   * @param sizeControl - Size multiplier from Arduino (0-100)
+   * @param low Low frequency band value
+   * @param lowMid Low-mid frequency band value
+   * @param mid Mid frequency band value
+   * @param high High frequency band value
+   * @param intensity Band-specific intensity value
+   * @param globalIntensity Overall audio intensity
+   * @param isBeat True if a beat was detected in current frame
+   * @param sizeControl Size multiplier from Arduino (0-100)
    */
   void display(float low, float lowMid, float mid, float high, 
                float intensity, float globalIntensity, boolean isBeat, int sizeControl) {
@@ -348,10 +348,10 @@ class Entity {
   }
   
   /**
-   * Draw a tetrahedron shape
-   * Creates a custom 3D shape for visual variety
+   * Draws a tetrahedron shape.
+   * Creates a custom 3D shape for visual variety.
    * 
-   * @param s - Size of the tetrahedron
+   * @param s Size of the tetrahedron
    */
   void drawTetrahedron(float s) {
     // Define vertices of tetrahedron
@@ -384,7 +384,7 @@ class Entity {
 }
 
 /**
- * EnvironmentElement class - Structural elements that form the visualizer environment
+ * EnvironmentElement class - Structural elements that form the visualizer environment.
  * These elements create the walls, boundaries or circular structures that
  * contain the visualization, reacting to audio with color and movement.
  */
@@ -395,7 +395,7 @@ class EnvironmentElement {
   final float minZ = -15000;  // Safety bound for extreme values
   
   // Position and dimensions
-  private float x, y, z;
+  float x, y, z;
   private float sizeX, sizeY;
   private float targetX, targetY;
   private float targetSizeX, targetSizeY;
@@ -415,13 +415,13 @@ class EnvironmentElement {
   private int resetCount = 0;
   
   /**
-   * Constructor - Creates a new environment element with position, size and angle
+   * Constructor - Creates a new environment element with position, size and angle.
    * 
-   * @param x - X coordinate
-   * @param y - Y coordinate
-   * @param sizeX - Width
-   * @param sizeY - Height
-   * @param angle - Initial rotation angle
+   * @param x X coordinate
+   * @param y Y coordinate
+   * @param sizeX Width
+   * @param sizeY Height
+   * @param angle Initial rotation angle
    */
   EnvironmentElement(float x, float y, float sizeX, float sizeY, float angle) {
     this.x = x;
@@ -449,19 +449,19 @@ class EnvironmentElement {
   }
   
   /**
-   * Alternative constructor for backward compatibility
+   * Alternative constructor for backward compatibility.
    */
   EnvironmentElement(float x, float y, float sizeX, float sizeY) {
     this(x, y, sizeX, sizeY, 0);
   }
   
   /**
-   * Update position smoothly
-   * Creates smooth transitions when moving between positions or modes
+   * Updates position smoothly.
+   * Creates smooth transitions when moving between positions or modes.
    * 
-   * @param newX - Target X coordinate
-   * @param newY - Target Y coordinate
-   * @param newAngle - Target rotation angle
+   * @param newX Target X coordinate
+   * @param newY Target Y coordinate
+   * @param newAngle Target rotation angle
    */
   void updatePosition(float newX, float newY, float newAngle) {
     this.targetX = newX;
@@ -478,10 +478,10 @@ class EnvironmentElement {
   }
   
   /**
-   * Update size smoothly with drift protection
+   * Updates size smoothly with drift protection.
    * 
-   * @param newSizeX - Target width
-   * @param newSizeY - Target height
+   * @param newSizeX Target width
+   * @param newSizeY Target height
    */
   void updateSize(float newSizeX, float newSizeY) {
     // Store original size for safe reset if needed
@@ -504,8 +504,8 @@ class EnvironmentElement {
   }
   
   /**
-   * Reset to original size values
-   * Prevents drift and ensures elements remain visible
+   * Resets to original size values.
+   * Prevents drift and ensures elements remain visible.
    */
   void resetSize() {
     this.sizeX = this.originalSizeX;
@@ -515,8 +515,8 @@ class EnvironmentElement {
   }
   
   /**
-   * Reset element to new starting position
-   * Called when element passes beyond view or needs repositioning
+   * Resets element to new starting position.
+   * Called when element passes beyond view or needs repositioning.
    */
   void resetElement() {
     this.z = random(startingZ, startingZ * 0.8);
@@ -524,18 +524,18 @@ class EnvironmentElement {
   }
   
   /**
-   * Display the element with audio reactivity
-   * Creates visual representation with color and size influenced by audio
+   * Displays the element with audio reactivity.
+   * Creates visual representation with color and size influenced by audio.
    * 
-   * @param low - Low frequency band value
-   * @param lowMid - Low-mid frequency band value
-   * @param mid - Mid frequency band value
-   * @param high - High frequency band value
-   * @param intensity - Band-specific intensity value
-   * @param globalIntensity - Overall audio intensity
-   * @param isBeat - True if a beat was detected in current frame
-   * @param sizeControl - Size multiplier from Arduino (0-100)
-   * @param speedMultiplier - Movement speed multiplier
+   * @param low Low frequency band value
+   * @param lowMid Low-mid frequency band value
+   * @param mid Mid frequency band value
+   * @param high High frequency band value
+   * @param intensity Band-specific intensity value
+   * @param globalIntensity Overall audio intensity
+   * @param isBeat True if a beat was detected in current frame
+   * @param sizeControl Size multiplier from Arduino (0-100)
+   * @param speedMultiplier Movement speed multiplier
    */
   void display(float low, float lowMid, float mid, float high, 
                float intensity, float globalIntensity, boolean isBeat,

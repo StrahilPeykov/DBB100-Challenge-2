@@ -1,3 +1,25 @@
+/**
+ * Music Visualizer Arduino Controller
+ * 
+ * This sketch provides a physical interface for controlling the Processing-based
+ * music visualization system. It reads sensor data from various inputs,
+ * manages an LCD display for feedback, and sends structured data to the
+ * Processing application over serial connection.
+ * 
+ * Hardware Components:
+ * - LCD display (16x2 character)
+ * - Rotary encoder with push button for parameter selection
+ * - Joystick for camera control
+ * - Ultrasonic distance sensor for speed control
+ * - RGB LED for visual feedback
+ * - Push buttons for mode toggling
+ * 
+ * Communication Protocol:
+ * - Serial communication at 115200 baud
+ * - Structured data messages prefixed with "DATA:"
+ * - Parameter values separated by commas
+ */
+
 #include <LiquidCrystal.h>
 #include "SR04.h"
 
@@ -31,7 +53,7 @@ volatile boolean rotationdirection;
 int selectedValue = 0;
 int A = 50, B = 50;  // Scale 0-100 for size and density
 int modeIndex = 0;
-String modes[] = {"CIRCLE", "RECT"};  // Simplified modes for visualization
+String modes[] = {"RECT", "CIRCLE"};  // Simplified modes for visualization
 
 // Joystick movement tracking
 String joystickState = "CE";
@@ -47,7 +69,7 @@ int colorState = 0;
 int redValue = 255, greenValue = 0, blueValue = 0;
 unsigned long lastRGBUpdate = 0;
 
-// New selectable MP3/MIC option
+// Audio input mode selection
 String audioMode = "MP3";
 String prevAudioMode = "MP3";
 
@@ -59,7 +81,10 @@ boolean stringComplete = false;
 unsigned long lastSendTime = 0;
 const int SEND_INTERVAL = 50;  // Send data every 50ms (20 updates per second)
 
-// Interrupt routine for rotary encoder
+/**
+ * Interrupt service routine for rotary encoder.
+ * Detects rotation direction when the encoder is turned.
+ */
 void isr() {
     delay(4);
     if (digitalRead(PinCLK))
@@ -69,6 +94,9 @@ void isr() {
     TurnDetected = true;
 }
 
+/**
+ * Setup function - initializes pins, serial communication, and hardware.
+ */
 void setup() {
     pinMode(PinCLK, INPUT);
     pinMode(PinDT, INPUT);
@@ -91,6 +119,9 @@ void setup() {
     updateDisplay();
 }
 
+/**
+ * Main loop - processes inputs and sends data to Processing.
+ */
 void loop() {
     // Check if we have received any commands from Processing
     if (stringComplete) {
@@ -187,7 +218,12 @@ void loop() {
     delay(10);
 }
 
-// Process commands received from Processing
+/**
+ * Processes commands received from Processing.
+ * Parses incoming commands and updates state accordingly.
+ * 
+ * @param command The command string to process
+ */
 void processCommand(String command) {
     // Trim any whitespace
     command.trim();
@@ -226,6 +262,10 @@ void processCommand(String command) {
     }
 }
 
+/**
+ * Updates the main LCD display.
+ * Shows size, density, visual mode, and audio mode.
+ */
 void updateDisplay() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -250,6 +290,10 @@ void updateDisplay() {
     lcd.print(audioMode);
 }
 
+/**
+ * Displays the second LCD screen.
+ * Shows joystick position and ultrasonic distance.
+ */
 void displaySecondScreen() {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -262,12 +306,23 @@ void displaySecondScreen() {
     lcd.print("cm");
 }
 
+/**
+ * Sets the RGB LED color.
+ * 
+ * @param r Red value (0-255)
+ * @param g Green value (0-255)
+ * @param b Blue value (0-255)
+ */
 void setColor(int r, int g, int b) {
     analogWrite(RED, r);
     analogWrite(GREEN, g);
     analogWrite(BLUE, b);
 }
 
+/**
+ * Creates a smooth rainbow cycle effect on the RGB LED.
+ * Transitions through red > yellow > green > cyan > blue > magenta > red.
+ */
 void rainbowCycle() {
     switch (colorState) {
         case 0: greenValue += 5; if (greenValue >= 255) { greenValue = 255; colorState = 1; } break; 
@@ -280,7 +335,10 @@ void rainbowCycle() {
     setColor(redValue, greenValue, blueValue);
 }
 
-// Handle serial events - accumulate characters until a newline is received
+/**
+ * Serial event handler.
+ * Accumulates incoming characters into a string until a newline is received.
+ */
 void serialEvent() {
     while (Serial.available()) {
         char inChar = (char)Serial.read();

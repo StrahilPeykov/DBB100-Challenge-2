@@ -1,5 +1,5 @@
 /**
- * Parameter_Drift_Fixes.pde
+ * ParameterDriftFixes.pde
  * 
  * Contains mechanisms to prevent parameter drift and maintain system stability.
  * This module monitors critical parameters, detects when they exceed normal bounds,
@@ -19,9 +19,9 @@ boolean needsParameterReset = false;
 final int AUTO_RESET_INTERVAL = 60000; // Auto-reset parameters every ~15-20 minutes (at 60fps)
 
 /**
- * Initialize the parameter tracking system
- * Stores original values of key parameters for later restoration
- * Call this at the end of the setup() function
+ * Initializes the parameter tracking system.
+ * Stores original values of key parameters for later restoration.
+ * Should be called at the end of the setup() function.
  */
 void initializeParameterTracking() {
   // Store original values of important parameters
@@ -37,9 +37,9 @@ void initializeParameterTracking() {
 }
 
 /**
- * Check for and fix parameter drift
- * Call this at the beginning of the draw() function
- * Automatically detects and corrects parameter drift
+ * Checks for and fixes parameter drift.
+ * Should be called at the beginning of the draw() function.
+ * Automatically detects and corrects parameter drift.
  */
 void checkAndFixParameterDrift() {
   // Check if auto-reset is needed based on elapsed frames
@@ -63,9 +63,9 @@ void checkAndFixParameterDrift() {
 }
 
 /**
- * Reset all parameters to original values
- * Restores system to a known good state
- * Can be called manually with a key press
+ * Resets all parameters to original values.
+ * Restores system to a known good state.
+ * Can be called manually with a key press.
  */
 void resetParameters() {
   println("Resetting parameters to original values");
@@ -110,9 +110,9 @@ void resetParameters() {
 }
 
 /**
- * Enforce bounds on parameters to prevent drift
+ * Enforces bounds on parameters to prevent drift.
  * Applies hard limits to critical parameters without
- * fully resetting the system
+ * fully resetting the system.
  */
 void enforceParameterBounds() {
   // Only prevent extreme speed drift when not manually controlled
@@ -137,8 +137,8 @@ void enforceParameterBounds() {
 }
 
 /**
- * Log current parameter state for debugging
- * Outputs key system parameters to the console
+ * Logs current parameter state for debugging.
+ * Outputs key system parameters to the console.
  */
 void logParameterState() {
   println("---------- PARAMETER STATE ----------");
@@ -152,10 +152,10 @@ void logParameterState() {
 }
 
 /**
- * Handle debug-specific key commands
- * Call this from the keyPressed() function
+ * Handles debug-specific key commands.
+ * Called from the keyPressed() function.
  * 
- * @param key - The key that was pressed
+ * @param key The key that was pressed
  */
 void handleDebugKeys(int key) {
   if (key == 'd' || key == 'D') {

@@ -1,7 +1,7 @@
 /**
- * Camera_Visual_Methods.pde
+ * CameraVisualMethods.pde
  * 
- * Contains methods for camera control and visual rendering of the 3D environment.
+ * Manages camera control and visual rendering of the 3D environment.
  * These methods handle the initialization, updating, and display of visual elements,
  * as well as camera movement, transitions between visual modes, and user input handling.
  * 
@@ -10,8 +10,8 @@
  */
 
 /**
- * Initialize visual entities with different spawn patterns
- * Creates a non-uniform distribution of visual elements in 3D space
+ * Initializes visual entities with different spawn patterns.
+ * Creates a non-uniform distribution of visual elements in 3D space.
  */
 void initializeEntities() {
   for (int i = 0; i < numEntities; i++) {
@@ -36,8 +36,8 @@ void initializeEntities() {
 }
 
 /**
- * Initialize environment elements with different patterns
- * Creates structural elements around the edges and within the visualization space
+ * Initializes environment elements with different patterns.
+ * Creates structural elements around the edges and within the visualization space.
  */
 void initializeEnvironment() {
   // Create elements with a mix of behaviors
@@ -87,8 +87,8 @@ void initializeEnvironment() {
 }
 
 /**
- * Reset camera position to default
- * Called when user presses reset button or joystick button
+ * Resets camera position to default.
+ * Called when user presses reset button or joystick button.
  */
 void resetCamera() {
   cameraAngle = 0;
@@ -96,9 +96,9 @@ void resetCamera() {
 }
 
 /**
- * Update camera with Arduino joystick input and audio reactivity
+ * Updates camera with Arduino joystick input and audio reactivity.
  * 
- * @param globalIntensity - Overall audio intensity for subtle camera movement
+ * @param globalIntensity Overall audio intensity for subtle camera movement
  */
 void updateCamera(float globalIntensity) {
   // Handle manual rotation input (from keyboard or Arduino joystick)
@@ -158,13 +158,13 @@ void updateCamera(float globalIntensity) {
 }
 
 /**
- * Draw the background with subtle color variations based on audio
- * Creates a color backdrop that responds to frequency bands
+ * Draws the background with subtle color variations based on audio.
+ * Creates a color backdrop that responds to frequency bands.
  * 
- * @param low - Low frequency band value
- * @param lowMid - Low-mid frequency band value
- * @param mid - Mid frequency band value
- * @param high - High frequency band value
+ * @param low Low frequency band value
+ * @param lowMid Low-mid frequency band value
+ * @param mid Mid frequency band value
+ * @param high High frequency band value
  */
 void drawBackground(float low, float lowMid, float mid, float high) {
   float r, g, b;
@@ -192,10 +192,10 @@ void drawBackground(float low, float lowMid, float mid, float high) {
 }
 
 /**
- * Draw status indicators with Arduino information
- * Provides visual feedback on system state, sensors, and controls
+ * Draws status indicators with Arduino information.
+ * Provides visual feedback on system state, sensors, and controls.
  * 
- * @param globalIntensity - Overall audio intensity for status indicators
+ * @param globalIntensity Overall audio intensity for status indicators
  */
 void drawStatusIndicators(float globalIntensity) {
   pushMatrix();
@@ -310,10 +310,10 @@ void drawStatusIndicators(float globalIntensity) {
 }
 
 /**
- * Draw and update stars
- * Renders the background star field with audio reactivity
+ * Draws and updates stars.
+ * Renders the background star field with audio reactivity.
  * 
- * @param globalIntensity - Overall audio intensity
+ * @param globalIntensity Overall audio intensity
  */
 void drawStars(float globalIntensity) {
   for (Star s : stars) {
@@ -323,14 +323,14 @@ void drawStars(float globalIntensity) {
 }
 
 /**
- * Draw entities (foreground objects)
- * Renders the mid-layer visual objects that respond to audio
+ * Draws entities (foreground objects).
+ * Renders the mid-layer visual objects that respond to audio.
  * 
- * @param low - Low frequency band value
- * @param lowMid - Low-mid frequency band value
- * @param mid - Mid frequency band value
- * @param high - High frequency band value
- * @param globalIntensity - Overall audio intensity
+ * @param low Low frequency band value
+ * @param lowMid Low-mid frequency band value
+ * @param mid Mid frequency band value
+ * @param high High frequency band value
+ * @param globalIntensity Overall audio intensity
  */
 void drawEntities(float low, float lowMid, float mid, float high, float globalIntensity) {
   for (int i = 0; i < numEntities; i++) {
@@ -347,14 +347,14 @@ void drawEntities(float low, float lowMid, float mid, float high, float globalIn
 }
 
 /**
- * Draw 3D wave effects
- * Creates flowing wave patterns that respond to audio
+ * Draws 3D wave effects.
+ * Creates flowing wave patterns that respond to audio.
  * 
- * @param low - Low frequency band value
- * @param lowMid - Low-mid frequency band value
- * @param mid - Mid frequency band value
- * @param high - High frequency band value
- * @param globalIntensity - Overall audio intensity
+ * @param low Low frequency band value
+ * @param lowMid Low-mid frequency band value
+ * @param mid Mid frequency band value
+ * @param high High frequency band value
+ * @param globalIntensity Overall audio intensity
  */
 void drawWaveEffects(float low, float lowMid, float mid, float high, float globalIntensity) {
   // Base amplitude affected by global intensity
@@ -398,19 +398,19 @@ void drawWaveEffects(float low, float lowMid, float mid, float high, float globa
 }
 
 /**
- * Draw a custom wave pattern - modified version of sine wave
- * Creates dynamic wave patterns along the sides of the visualization
+ * Draws a custom wave pattern - modified version of sine wave.
+ * Creates dynamic wave patterns along the sides of the visualization.
  * 
- * @param xPos - X position of the wave
- * @param baseAmp - Base amplitude
- * @param segments - Number of segments in the wave
- * @param depth - Z-depth of the wave
- * @param waveFreq - Wave frequency
- * @param waveSpeed - Wave speed
- * @param freqLow - Low frequency value for color
- * @param freqHigh - High frequency value for color
- * @param opacity - Opacity multiplier for transition
- * @param globalIntensity - Overall audio intensity
+ * @param xPos X position of the wave
+ * @param baseAmp Base amplitude
+ * @param segments Number of segments in the wave
+ * @param depth Z-depth of the wave
+ * @param waveFreq Wave frequency
+ * @param waveSpeed Wave speed
+ * @param freqLow Low frequency value for color
+ * @param freqHigh High frequency value for color
+ * @param opacity Opacity multiplier for transition
+ * @param globalIntensity Overall audio intensity
  */
 void drawCustomWave(float xPos, float baseAmp, int segments, int depth, 
                   float waveFreq, float waveSpeed, float freqLow, float freqHigh, 
@@ -487,15 +487,15 @@ void drawCustomWave(float xPos, float baseAmp, int segments, int depth,
 }
 
 /**
- * Draw spiral waves
- * Creates spiral wave patterns for circular mode
+ * Draws spiral waves.
+ * Creates spiral wave patterns for circular mode.
  * 
- * @param radius - Base radius of the spiral
- * @param baseAmp - Base amplitude
- * @param freqMid - Mid frequency value for color
- * @param freqHigh - High frequency value for color
- * @param opacity - Opacity multiplier for transition
- * @param globalIntensity - Overall audio intensity
+ * @param radius Base radius of the spiral
+ * @param baseAmp Base amplitude
+ * @param freqMid Mid frequency value for color
+ * @param freqHigh High frequency value for color
+ * @param opacity Opacity multiplier for transition
+ * @param globalIntensity Overall audio intensity
  */
 void drawSpiralWaves(float radius, float baseAmp, float freqMid, float freqHigh, 
                      float opacity, float globalIntensity) {
@@ -568,14 +568,14 @@ void drawSpiralWaves(float radius, float baseAmp, float freqMid, float freqHigh,
 }
 
 /**
- * Draw environment elements with transition support
- * Renders the structural elements of the visualization
+ * Draws environment elements with transition support.
+ * Renders the structural elements of the visualization.
  * 
- * @param low - Low frequency band value
- * @param lowMid - Low-mid frequency band value
- * @param mid - Mid frequency band value
- * @param high - High frequency band value
- * @param globalIntensity - Overall audio intensity
+ * @param low Low frequency band value
+ * @param lowMid Low-mid frequency band value
+ * @param mid Mid frequency band value
+ * @param high High frequency band value
+ * @param globalIntensity Overall audio intensity
  */
 void drawEnvironment(float low, float lowMid, float mid, float high, float globalIntensity) {
   // Update transition progress if transitioning
@@ -662,8 +662,8 @@ void drawEnvironment(float low, float lowMid, float mid, float high, float globa
 }
 
 /**
- * Update transition between rectangular and circular modes
- * Handles smooth transition between visual modes
+ * Updates transition between rectangular and circular modes.
+ * Handles smooth transition between visual modes.
  */
 void updateTransition() {
   if (transitioning) {
@@ -700,8 +700,8 @@ void updateTransition() {
 }
 
 /**
- * Handle keyboard input
- * Process key presses for camera and visualization control
+ * Handles keyboard input.
+ * Process key presses for camera and visualization control.
  */
 void keyPressed() {
   // Camera rotation controls using arrow keys
@@ -760,8 +760,8 @@ void keyPressed() {
 }
 
 /**
- * Handle keyboard release
- * Process key releases for camera control
+ * Handles keyboard release.
+ * Process key releases for camera control.
  */
 void keyReleased() {
   if (keyCode == LEFT) {

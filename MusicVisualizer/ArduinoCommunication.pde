@@ -1,7 +1,7 @@
 /**
- * Arduino_Communication.pde
+ * ArduinoCommunication.pde
  * 
- * Handles bidirectional communication with the Arduino controller.
+ * Manages bidirectional communication with the Arduino controller.
  * This module establishes a serial connection with the Arduino,
  * processes incoming sensor and control data, and applies the received
  * values to visualization parameters. It also sends state information
@@ -16,7 +16,7 @@
  */
 
 /**
- * Setup Arduino communication
+ * Sets up Arduino communication.
  * Initializes serial connection to the Arduino and handles
  * connection errors gracefully.
  */
@@ -29,7 +29,7 @@ void setupArduinoCommunication() {
     }
     
     // Try to connect to the Arduino (may need to adjust the port index)
-    String portName = Serial.list()[8]; // First port in the list - change index if needed
+    String portName = Serial.list()[8]; // 0 is first port in the list - change index if needed
     arduinoPort = new Serial(this, portName, 115200);
     arduinoPort.bufferUntil('\n'); // Buffer until newline character
     arduinoConnected = true;
@@ -42,11 +42,11 @@ void setupArduinoCommunication() {
 }
 
 /**
- * Process incoming serial data from Arduino
+ * Processes incoming serial data from Arduino.
  * Parses structured messages containing sensor and control values
  * and applies them to visualization parameters.
  * 
- * @param port - The Serial port from which data was received
+ * @param port The Serial port from which data was received
  */
 void serialEvent(Serial port) {
   // Read the incoming data
@@ -111,8 +111,8 @@ void serialEvent(Serial port) {
 }
 
 /**
- * Apply joystick control to camera rotation
- * Converts joystick position to camera movement flags
+ * Applies joystick control to camera rotation.
+ * Converts joystick position to camera movement flags.
  */
 void processJoystickControl() {
   // Reset rotation flags
@@ -139,14 +139,14 @@ void processJoystickControl() {
 }
 
 /**
- * Process ultrasonic distance for speed control
+ * Processes ultrasonic distance for speed control.
  * Maps distance readings to movement speed with an exponential curve
  * for more intuitive control.
  */
 void processDistanceSensor() {
   // Only update if we have a valid distance reading
   if (arduinoDistance > 0 && arduinoDistance < 300) {
-    // Use a much steeper exponential curve for distance-to-speed mapping
+    // Use a steep exponential curve for distance-to-speed mapping
     float targetSpeed;
     
     if (arduinoDistance < 10) {
@@ -156,8 +156,7 @@ void processDistanceSensor() {
       // Minimum speed when far away
       targetSpeed = 0.5;
     } else {
-      // Much steeper curve - this will give more reasonable speeds at middle distances
-      // At 40cm, this should give approximately 1.2x speed
+      // Steeper curve for better control at middle distances
       targetSpeed = 5.0 * pow(0.965, arduinoDistance - 10);
     }
     
@@ -183,8 +182,8 @@ void processDistanceSensor() {
 }
 
 /**
- * Adjust particle count based on Arduino density control
- * Maps density control value to star count with range limits
+ * Adjusts particle count based on Arduino density control.
+ * Maps density control value to star count with range limits.
  */
 void adjustParticleCount() {
   // Map density control (0-100) to desired star count
@@ -218,7 +217,7 @@ void adjustParticleCount() {
 }
 
 /**
- * Toggle between voice and music input
+ * Toggles between voice and music input.
  * Handles the transition between microphone and MP3 playback,
  * including FFT reconfiguration and parameter adjustments.
  */

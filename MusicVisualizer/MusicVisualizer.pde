@@ -1,18 +1,18 @@
 /**
  * Music Visualizer - Main Program
  * 
- * This program creates an interactive audio visualization system that responds to both 
- * music and voice input. It integrates Arduino sensor data to control visualization parameters,
- * providing a multi-sensory interactive experience.
+ * An interactive audio visualization system that responds to both music and voice input,
+ * integrated with Arduino sensors for physical control. The system creates an immersive
+ * audio-visual experience with 3D visualization that reacts to music characteristics.
  * 
  * Core Features:
- * - Real-time FFT audio analysis with multiple frequency bands
- * - Dual input modes (MP3 music and microphone)
- * - Advanced beat and chord detection algorithms
- * - Color mapping based on musical notes (Scriabin synesthesia)
- * - Dynamic 3D visualization with multiple visual elements
- * - Arduino integration for physical control interface
- * - Camera controls for exploring the 3D environment
+ * - Dual input modes: MP3 music playback and microphone input for voice
+ * - Real-time FFT audio analysis with multiple frequency band processing
+ * - Advanced beat detection and chord recognition algorithms
+ * - Synesthetic color mapping based on musical notes (Scriabin system)
+ * - Dynamic 3D visualization with responsive particle systems
+ * - Physical control interface through Arduino sensors
+ * - Interactive camera system for exploring the 3D environment
  * 
  * Required Libraries:
  * - Minim (audio processing)
@@ -39,7 +39,7 @@ String serialBuffer = "";
 // Arduino control variables
 int arduinoSizeControl = 50;    // Size control value (0-100) from Arduino
 int arduinoDensityControl = 50; // Density control value (0-100) from Arduino
-String arduinoVisualMode = "CIRCLE"; // Visual mode from Arduino (matches modes[] in Arduino)
+String arduinoVisualMode = "CIRCLE"; // Visual mode from Arduino
 String arduinoJoystickPos = "CE"; // Joystick position (CE = center)
 boolean arduinoJoystickButton = false; // Joystick button state
 int arduinoDistance = 100; // Distance from ultrasonic sensor (cm)
@@ -179,10 +179,11 @@ float movementSpeedTransition = 0.95; // Smooth transition between speed changes
 
 /**
  * Setup - Initialize audio, visual elements, and communication
+ * Sets up all system components and prepares for visualization
  */
 void setup() {
   // Set initial energy threshold for chorus detection
-  //energyThreshold = 1200;
+  energyThreshold = 800;
   
   // Set initial speed values
   baseMovementSpeed = 0.45;
@@ -241,19 +242,19 @@ void setup() {
   // Initialize parameter tracking for drift prevention
   initializeParameterTracking();
   
-  // Force ultrasonic sensor debugging on startup
+  // Log initial system state
   if (arduinoConnected) {
     println("Ultrasonic sensor enabled - Distance: " + arduinoDistance + "cm");
     println("Initial speed multiplier: " + nf(currentMovementSpeed, 1, 1) + "x");
   }
   
-  // Log energy threshold
   println("Energy threshold set to: " + energyThreshold);
   println("Starting in SCRIABIN COLOR MODE");
 }
 
 /**
  * Main draw loop - Process audio and update visualization
+ * This is the heart of the system, called continuously to update the visualization
  */
 void draw() {
   // Check for and fix parameter drift
@@ -306,14 +307,4 @@ void draw() {
   
   // Handle visual mode transitions
   updateTransition();
-  
-  // Debug: Print high energy status periodically to confirm detection
-  if (frameCount % 60 == 0) {
-    // Print to confirm activation
-    if (highEnergySectionActive) {
-      println("HIGH ENERGY SECTION ACTIVE! Counter: " + highEnergyCounter + 
-              " Energy: " + nf(sustainedEnergy, 1, 1) + 
-              " Threshold: " + nf(energyThreshold, 1, 1));
-    }
-  }
 }
