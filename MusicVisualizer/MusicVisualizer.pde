@@ -23,14 +23,14 @@ import ddf.minim.*;
 import ddf.minim.analysis.*;
 import processing.serial.*; // Serial library for Arduino communication
 
-// ================ GLOBAL AUDIO OBJECTS ================
+// GLOBAL AUDIO OBJECTS
 
 Minim minim;
 AudioPlayer song;
 AudioInput microphone;
 FFT fft;
 
-// ================ ARDUINO COMMUNICATION ================
+// ARDUINO COMMUNICATION
 
 Serial arduinoPort;
 boolean arduinoConnected = false;
@@ -45,7 +45,7 @@ boolean arduinoJoystickButton = false; // Joystick button state
 int arduinoDistance = 100; // Distance from ultrasonic sensor (cm)
 boolean manualDistance = false; // Flag to track if user is controlling with sensor
 
-// ================ AUDIO ANALYSIS PARAMETERS ================
+// AUDIO ANALYSIS PARAMETERS
 
 // Input mode selection
 boolean useVoiceInput = false;
@@ -72,7 +72,7 @@ float prevScoreHigh = 0;
 float smoothingFactor = 0.3; // Controls transition smoothness between frames
 float decayRate = 15; // Controls how quickly scores decrease when audio fades
 
-// ================ BEAT DETECTION VARIABLES ================
+// BEAT DETECTION VARIABLES
 
 float[] prevSpectrum;
 float spectralFlux = 0;
@@ -83,13 +83,13 @@ float beatTimer = 0;
 float beatInterval = 0;
 float beatIntensity = 0; // Strength of detected beat (0.0-3.0)
 
-// ================ AUDIO MEMORY/ECHO EFFECT ================
+// AUDIO MEMORY/ECHO EFFECT
 
 final int ECHO_FRAMES = 10; // Number of frames to store for echo effect
 float[][] echoBuffer;
 int echoIndex = 0;
 
-// ================ CAMERA CONTROL ================
+// CAMERA CONTROL
 
 float cameraAngle = 0;
 float verticalAngle = 0;
@@ -100,7 +100,7 @@ boolean lookUp = false;
 boolean lookDown = false;
 boolean autoMode = false; // Auto rotation/movement mode toggle
 
-// ================ VISUAL ELEMENTS ================
+// VISUAL ELEMENTS
 
 // Visual entities (foreground objects)
 int numEntities;
@@ -115,14 +115,14 @@ Star[] stars;
 int numStars = 350;
 int baseNumStars = 350; // Store base number for Arduino density control
 
-// ================ VISUAL MODE PARAMETERS ================
+// VISUAL MODE PARAMETERS
 
 boolean isCircularMode = false;
 float transitionProgress = 0.0;
 boolean transitioning = false;
 final float TRANSITION_SPEED = 0.025;
 
-// ================ COLOR SYSTEMS ================
+// COLOR SYSTEMS
 
 // 1. Scriabin's synesthesia color system
 // Maps musical notes to specific colors based on Alexander Scriabin's synesthetic associations
@@ -141,7 +141,7 @@ color[] scriabinColors = {
   color(150, 210, 255)    // B: Bluish-White
 };
 
-// 2. Rainbow color mode variables
+// 2. Rainbow color mode variables (outdated)
 boolean useRainbowMode = false;
 float rainbowSpeed = 0.5;        // Controls how fast the rainbow cycles
 float rainbowOffset = 0.0;       // Current position in the rainbow cycle
@@ -151,7 +151,7 @@ float rainbowFreqInfluence = 0.6; // How much frequencies affect the rainbow
 // Color system toggle
 boolean useScriabinColors = true; // True for Scriabin, False for Rainbow
 
-// ================ CHORD DETECTION VARIABLES ================
+// CHORD DETECTION VARIABLES
 
 float[] noteStrengths = new float[12]; // Strength of each of the 12 notes (C through B)
 int dominantNote = 0;                  // Most prominent note (0=C, 1=C#, etc)
@@ -164,14 +164,14 @@ float otherNoteDecay = 0.85;           // Decay rate for non-dominant notes
 float noteFadeThreshold = 0.1;         // Threshold for note fading
 int sustainCountdown = 0;              // Counter for extended sustain after note release
 
-// ================ ENERGY DETECTION VARIABLES ================
+// ENERGY DETECTION VARIABLES
 
 float sustainedEnergy = 0;
 float energyThreshold = 1200;
 boolean highEnergySectionActive = false;
 int highEnergyCounter = 0;
 
-// ================ MOVEMENT SPEED VARIABLES ================
+// MOVEMENT SPEED VARIABLES
 
 float baseMovementSpeed = 0.35; // Base movement speed multiplier
 float currentMovementSpeed = 0.35; // Current movement speed multiplier
@@ -183,7 +183,7 @@ float movementSpeedTransition = 0.95; // Smooth transition between speed changes
  */
 void setup() {
   // Set initial energy threshold for chorus detection
-  energyThreshold = 800;
+  energyThreshold = 700;
   
   // Set initial speed values
   baseMovementSpeed = 0.45;

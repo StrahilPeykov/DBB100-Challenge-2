@@ -1,11 +1,5 @@
 /**
- * ArduinoCommunication.pde
- * 
  * Manages bidirectional communication with the Arduino controller.
- * This module establishes a serial connection with the Arduino,
- * processes incoming sensor and control data, and applies the received
- * values to visualization parameters. It also sends state information
- * back to the Arduino to maintain synchronization.
  * 
  * The Arduino provides:
  * - Size and density control via rotary encoder
