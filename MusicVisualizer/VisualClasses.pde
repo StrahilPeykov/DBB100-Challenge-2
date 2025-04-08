@@ -1,9 +1,5 @@
 /**
- * VisualClasses.pde
- * 
- * Contains the core visualization entities that form the visual representation
- * of audio data. Each class responds to audio analysis data in unique ways,
- * creating a layered, dynamic visualization system.
+ * Core visualization entities that form the visual representation of audio data. 
  * 
  * The visualization consists of three main element types:
  * - Stars: Background elements creating a sense of movement through space

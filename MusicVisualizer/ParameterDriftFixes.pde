@@ -1,8 +1,6 @@
 /**
- * ParameterDriftFixes.pde
- * 
  * Contains mechanisms to prevent parameter drift and maintain system stability.
- * This module monitors critical parameters, detects when they exceed normal bounds,
+ * Monitors critical parameters, detects when they exceed normal bounds,
  * and applies corrections to prevent visualization artifacts or performance issues.
  * 
  * Key features:

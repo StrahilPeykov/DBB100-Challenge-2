@@ -1,6 +1,4 @@
 /**
- * CameraVisualMethods.pde
- * 
  * Manages camera control and visual rendering of the 3D environment.
  * These methods handle the initialization, updating, and display of visual elements,
  * as well as camera movement, transitions between visual modes, and user input handling.
@@ -740,7 +738,6 @@ void keyPressed() {
     println("SWITCHED TO: " + (useScriabinColors ? "SCRIABIN COLOR MODE" : "RAINBOW COLOR MODE"));
   }
   if (key == 'r' || key == 'R') {
-    // Reset camera
     resetCamera();
     println("CAMERA RESET");
   }

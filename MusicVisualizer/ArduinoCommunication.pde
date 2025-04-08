@@ -23,7 +23,7 @@ void setupArduinoCommunication() {
     }
     
     // Try to connect to the Arduino (may need to adjust the port index)
-    String portName = Serial.list()[8]; // 0 is first port in the list - change index if needed
+    String portName = Serial.list()[8]; // 0 is first port in the list
     arduinoPort = new Serial(this, portName, 115200);
     arduinoPort.bufferUntil('\n'); // Buffer until newline character
     arduinoConnected = true;
@@ -65,9 +65,7 @@ void serialEvent(Serial port) {
           arduinoJoystickPos = values[4];
           arduinoJoystickButton = values[5].equals("1");
           arduinoDistance = int(values[6]);
-          
-          // Apply immediate effects
-          
+                    
           // Toggle Voice/Music Input when needed
           if (audioModeValue.equals("MIC") && !useVoiceInput) {
             toggleVoiceInput();

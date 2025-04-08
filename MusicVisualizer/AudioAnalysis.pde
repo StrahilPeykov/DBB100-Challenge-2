@@ -1,7 +1,5 @@
 /**
- * AudioAnalysis.pde - Advanced Audio Processing Algorithms
- * 
- * This file contains the core audio analysis system including:
+ * Contains the core audio analysis system including:
  * - Temporal buffer management for audio memory and echo effects
  * - Musical note and chord detection with synesthetic color mapping
  * - Beat detection using spectral flux algorithm
