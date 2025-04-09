@@ -1,10 +1,5 @@
 /**
  * Manages camera control and visual rendering of the 3D environment.
- * These methods handle the initialization, updating, and display of visual elements,
- * as well as camera movement, transitions between visual modes, and user input handling.
- * 
- * The visualization system uses layers of elements (stars, entities, environment elements)
- * that move through 3D space while responding to audio analysis and user input.
  */
 
 /**

@@ -1,12 +1,5 @@
 /**
- * Contains the core audio analysis system including:
- * - Temporal buffer management for audio memory and echo effects
- * - Musical note and chord detection with synesthetic color mapping
- * - Beat detection using spectral flux algorithm
- * - Frequency band analysis with perceptual weighting
- * - Audio energy pattern recognition for section detection
- * - Dynamic color generation based on audio characteristics
- * 
+ * Contains the core audio analysis system.
  * Integrates concepts from music theory, psychoacoustics, signal processing.
  */
 

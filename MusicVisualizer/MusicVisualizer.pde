@@ -2,15 +2,6 @@
  * An interactive audio visualization system that responds to both music and voice input,
  * integrated with Arduino sensors for physical control. 
  * 
- * Core Features:
- * - Dual input modes: MP3 music playback and microphone input for voice
- * - Real-time FFT audio analysis with multiple frequency band processing
- * - Advanced beat detection and chord recognition algorithms
- * - Synesthetic color mapping based on musical notes (Scriabin system)
- * - Dynamic 3D visualization with responsive particle systems
- * - Physical control interface through Arduino sensors
- * - Interactive camera system for exploring the 3D environment
- * 
  * Required Libraries:
  * - Minim (audio processing)
  * - Serial (Arduino communication)

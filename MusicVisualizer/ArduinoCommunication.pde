@@ -1,12 +1,5 @@
 /**
  * Manages communication with the Arduino controller.
- * 
- * The Arduino provides:
- * - Size and density control via rotary encoder
- * - Visual mode selection
- * - Audio input mode selection (MP3/Voice)
- * - Camera control via joystick
- * - Speed control via ultrasonic distance sensor
  */
 
 /**
