@@ -1,25 +1,3 @@
-/**
- * Music Visualizer Arduino Controller
- * 
- * This sketch provides a physical interface for controlling the Processing-based
- * music visualization system. It reads sensor data from various inputs,
- * manages an LCD display for feedback, and sends structured data to the
- * Processing application over serial connection.
- * 
- * Hardware Components:
- * - LCD display (16x2 character)
- * - Rotary encoder with push button for parameter selection
- * - Joystick for camera control
- * - Ultrasonic distance sensor for speed control
- * - RGB LED for visual feedback
- * - Push buttons for mode toggling
- * 
- * Communication Protocol:
- * - Serial communication at 115200 baud
- * - Structured data messages prefixed with "DATA:"
- * - Parameter values separated by commas
- */
-
 #include <LiquidCrystal.h>
 #include "SR04.h"
 
@@ -53,7 +31,7 @@ volatile boolean rotationdirection;
 int selectedValue = 0;
 int A = 50, B = 50;  // Scale 0-100 for size and density
 int modeIndex = 0;
-String modes[] = {"RECT", "CIRCLE"};  // Simplified modes for visualization
+String modes[] = {"RECT", "CIRCLE"};  
 
 // Joystick movement tracking
 String joystickState = "CE";
