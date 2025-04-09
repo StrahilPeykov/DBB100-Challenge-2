@@ -1,5 +1,5 @@
 /**
- * Manages bidirectional communication with the Arduino controller.
+ * Manages communication with the Arduino controller.
  * 
  * The Arduino provides:
  * - Size and density control via rotary encoder
@@ -10,9 +10,8 @@
  */
 
 /**
- * Sets up Arduino communication.
  * Initializes serial connection to the Arduino and handles
- * connection errors gracefully.
+ * connection errors.
  */
 void setupArduinoCommunication() {
   try {

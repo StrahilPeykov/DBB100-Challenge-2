@@ -1,10 +1,5 @@
 /**
  * Core visualization entities that form the visual representation of audio data. 
- * 
- * The visualization consists of three main element types:
- * - Stars: Background elements creating a sense of movement through space
- * - Entities: Mid-layer objects that respond directly to frequency bands
- * - EnvironmentElements: Structural elements that form walls/boundaries
  */
 
 /**

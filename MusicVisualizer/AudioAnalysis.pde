@@ -7,8 +7,7 @@
  * - Audio energy pattern recognition for section detection
  * - Dynamic color generation based on audio characteristics
  * 
- * The algorithms integrate concepts from music theory, psychoacoustics,
- * and signal processing to create responsive audio-visual experiences.
+ * Integrates concepts from music theory, psychoacoustics, signal processing.
  */
 
 /**

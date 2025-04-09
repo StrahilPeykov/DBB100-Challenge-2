@@ -1,9 +1,6 @@
 /**
- * Music Visualizer - Main Program
- * 
  * An interactive audio visualization system that responds to both music and voice input,
- * integrated with Arduino sensors for physical control. The system creates an immersive
- * audio-visual experience with 3D visualization that reacts to music characteristics.
+ * integrated with Arduino sensors for physical control. 
  * 
  * Core Features:
  * - Dual input modes: MP3 music playback and microphone input for voice

@@ -2,12 +2,6 @@
  * Contains mechanisms to prevent parameter drift and maintain system stability.
  * Monitors critical parameters, detects when they exceed normal bounds,
  * and applies corrections to prevent visualization artifacts or performance issues.
- * 
- * Key features:
- * - Automatic parameter monitoring and bounds enforcement
- * - Periodic parameter checks and logging
- * - Manual and automatic reset capabilities
- * - Debug utilities for system maintenance
  */
 
 // Global parameter monitoring and reset variables
