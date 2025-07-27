@@ -29,7 +29,7 @@ An interactive 3D audio visualization system that transforms sound into immersiv
 - **LCD Display**: Real-time feedback on current settings and sensor values
 - **RGB LED**: Visual status indicator with rainbow cycling effects
 
-## 🎛Controls
+## Controls
 
 ### Keyboard Controls
 - **Arrow Keys**: Manual camera rotation and vertical movement
